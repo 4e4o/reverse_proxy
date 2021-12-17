@@ -7,8 +7,9 @@
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/signals2.hpp>
+#include <boost/array.hpp>
 
-#include <span>
+#include "Base/Span.hpp"
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
@@ -53,7 +54,7 @@ private:
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::io_service::strand m_strand;
     std::array<uint8_t, READ_BUFFER_SIZE> m_readBuffer;
-    std::span<const uint8_t> m_writeSpan;
+    span<const uint8_t> m_writeSpan;
     bool m_writing;
     bool m_closeOnWrite;
     bool m_closed;

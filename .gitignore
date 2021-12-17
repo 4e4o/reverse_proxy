@@ -1,0 +1,5 @@
+*.vscode 
+build-*
+CMakeLists.txt.user*
+*.blend1
+__pycache__

@@ -21,7 +21,7 @@ void ProxyDataSession::start() {
     if (m_other == nullptr)
         return;
 
-    onData.connect([this](char *ptr, std::size_t size) {
+    onData.connect([this](const uint8_t *ptr, std::size_t size) {
         writeToOther(ptr, size);
     });
 
@@ -43,7 +43,7 @@ void ProxyDataSession::start() {
     readSome();
 }
 
-void ProxyDataSession::writeToOther(char *ptr, std::size_t size) {
+void ProxyDataSession::writeToOther(const uint8_t *ptr, std::size_t size) {
     if (m_other == nullptr)
         return;
 

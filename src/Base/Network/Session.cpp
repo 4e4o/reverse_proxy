@@ -59,47 +59,43 @@ void Session::readSome(std::size_t maxSize) {
     }));
 }
 
-void Session::writeAll(const char *ptr, std::size_t size) {
+void Session::writeAll(const uint8_t *ptr, std::size_t size) {
     auto self = shared_from_this();
-    const std::vector<char> buffer(ptr, ptr + size);
-    post([self, buffer = std::move(buffer)]() {
+    m_writeSpan = {ptr, size};
+    post([self]() {
         if (self->m_closed)
             return;
 
-        self->m_writeBuffers.emplace_back(std::move(buffer));
         self->doWrite();
     });
 }
 
 void Session::doWrite() {
-    if (m_writing || m_writeBuffers.empty())
+    if (m_writing) {
+        AAP->log("Session::doWrite m_writing == true, FIX IT !!!!! %p", this);
         return;
+    }
 
     m_writing = true;
-    const std::vector<char>& to_send = m_writeBuffers.front();
-    const auto to_send_size = to_send.size();
     auto self = shared_from_this();
 
     boost::asio::async_write(
-                m_socket, boost::asio::buffer(to_send, to_send_size),
-                m_strand.wrap([self, to_send_size](boost::system::error_code ec,
+                m_socket, boost::asio::buffer(m_writeSpan.data(), m_writeSpan.size()),
+                m_strand.wrap([self](boost::system::error_code ec,
                               std::size_t bytes_transferred) {
         if (self->m_closed)
             return;
 
-        if (ec || (to_send_size != bytes_transferred)) {
+        if (ec || (self->m_writeSpan.size() != bytes_transferred)) {
             self->errorHandler(ec);
             return;
         }
 
         self->m_writing = false;
-        self->m_writeBuffers.pop_front();
         self->onWriteDone();
 
         if (self->m_closeOnWrite)
             self->closeOnWrite();
-        else
-            self->doWrite();
     }));
 }
 

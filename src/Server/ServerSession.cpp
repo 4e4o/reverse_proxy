@@ -1,15 +1,15 @@
 #include "ServerSession.hpp"
 #include "Base/AApplication.h"
 
-#include <iostream>
-
 ServerSession::ServerSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : ProxyDataSession(io_service, std::move(sock)) {
-    std::cout << "ServerSession::ServerSession " << this << std::endl;
+    : ProxyDataSession(io_service, std::move(sock)),
+      m_serverId(0),
+      m_dataRequestsCount(0) {
+    AAP->log("ServerSession::ServerSession %p", this);
 }
 
 ServerSession::~ServerSession() {
-    std::cout << "ServerSession::~ServerSession " << this << std::endl;
+    AAP->log("ServerSession::~ServerSession %p", this);
 }
 
 ConnectionType ServerSession::type() const {
@@ -23,10 +23,10 @@ uint8_t ServerSession::serverId() const {
 void ServerSession::start() {
     auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
 
-    onData.connect_extended([self](const boost::signals2::connection &c, char *ptr, std::size_t) {
+    onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
         self->m_type = static_cast<ConnectionType>(ptr[0]);
-        self->m_serverId = static_cast<uint8_t>(ptr[1]);
+        self->m_serverId = ptr[1];
 
         switch(self->m_type) {
         case ConnectionType::CLIENT:
@@ -34,61 +34,49 @@ void ServerSession::start() {
         case ConnectionType::SERVICE_CLIENT_DATA:
             break;
         default:
-            std::cout << "ServerSession::onData invalid type " << self.get() << std::endl;
+            AAP->log("ServerSession::onData invalid type %p", self.get());
             return;
         }
 
+        self->m_requestBuffer = {static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA), self->m_serverId};
         self->sessionTypeDefined(self);
-
-        switch(self->m_type) {
-        case ConnectionType::CLIENT:
-            self->startClient();
-            break;
-        case ConnectionType::SERVICE_CLIENT_CONTROL:
-            self->startServiceControl();
-            break;
-        case ConnectionType::SERVICE_CLIENT_DATA:
-            self->startServiceData();
-            break;
-        }
     });
 
     self->readAll(2);
 }
 
 // -------------- client
-void ServerSession::startClient() {
-    // TODO Timeout
-//    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
-//    serviceRequest(self);
-}
 
 void ServerSession::setDataSession(TSession s) {
-    AAP->log("ServerSession::setDataSession %p %p", s.get(), this);
+    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
 
-    setOther(s);
-    ProxyDataSession::start();    
-    s->ProxyDataSession::start();
+    post([self, s]() {
+        AAP->log("ServerSession::setDataSession %p %p", s.get(), self.get());
+
+        self->setOther(s);
+        self->ProxyDataSession::start();
+        s->ProxyDataSession::start();
+    });
 }
 // --------------
 
 // -------------- service control
-void ServerSession::startServiceControl() {
-    // TODO keep alive set
-//    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
-//    newServiceControl(self);
-//    start protocol
-}
 
 void ServerSession::requestDataSession() {
-    const uint8_t t = static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA);
-    const uint8_t toSend[2] = {t, m_serverId};
-    writeAll(reinterpret_cast<const char*>(toSend), sizeof(toSend));
+    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+
+    post([self]() {
+        self->onWriteDone.connect_extended([self](const boost::signals2::connection &c) {
+            c.disconnect();
+            self->m_dataRequestsCount--;
+
+            if (self->m_dataRequestsCount > 0)
+                self->requestDataSession();
+        });
+
+        AAP->log("ServerSession::requestDataSession %p", self.get());
+        self->m_dataRequestsCount++;
+        self->writeAll(self->m_requestBuffer.data(), self->m_requestBuffer.size());
+    });
 }
 // --------------
-
-void ServerSession::startServiceData() {
-    // nothing todo, delete?
-//    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
-//    newServiceData(self);
-}

@@ -30,6 +30,7 @@ private:
     std::shared_ptr<IServer> m_server;
     std::map<uint8_t, TSession> m_control;
     std::map<uint8_t, TSessionQueue> m_serviceRequests;
+    const uint8_t m_success;
 };
 
 #endif // SERVER_INSTANCE_HPP

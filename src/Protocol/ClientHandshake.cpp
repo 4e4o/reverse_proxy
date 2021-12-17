@@ -17,14 +17,14 @@ void ClientHandshake::sendSessionType(TSession s) {
         self->onSessionTypeSended(s);
     });
 
-    const uint8_t toSend[2] = {m_sessionType, m_serverId};
-    s->writeAll(reinterpret_cast<const char*>(toSend), sizeof(toSend));
+    m_sendBuf = {m_sessionType, m_serverId};
+    s->writeAll(m_sendBuf.data(), m_sendBuf.size());
 }
 
 void ClientHandshake::onSessionTypeSended(TSession s) {
     auto self = shared_from_this();
 
-    s->onData.connect_extended([self, s](const boost::signals2::connection &c, char *ptr, std::size_t) {
+    s->onData.connect_extended([self, s](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
         const uint8_t success = ptr[0];
         AAP->log("ClientHandshake success = %i", success);

@@ -6,8 +6,6 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
-#include <iostream>
-
 ServiceInstance::ServiceInstance(boost::asio::io_service &io)
     : Instance(io) {
 }
@@ -39,7 +37,7 @@ void ServiceInstance::stop() {
 }
 
 void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s) {
-    std::cout << "ServiceInstance::setControlSession connected to remote server " << this << std::endl;
+    AAP->log("ServiceInstance::setControlSession connected to remote server %p", this);
 
     m_controlSession = s;
 
@@ -51,7 +49,7 @@ void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s
 }
 
 void ServiceInstance::startDataChannels() {
-    std::cout << "ServiceInstance::startDataChannels " << this << std::endl;
+    AAP->log("ServiceInstance::startDataChannels %p", this);
 
     std::shared_ptr<Session> s(new Session(io(), boost::asio::ip::tcp::socket(io())));
     std::shared_ptr<Client> cl(new Client(io()));
@@ -69,7 +67,7 @@ void ServiceInstance::startDataChannels() {
 }
 
 void ServiceInstance::startDataClient(std::shared_ptr<Session> s) {
-    std::cout << "ServiceInstance::startDataClient " << this << std::endl;
+    AAP->log("ServiceInstance::startDataClient %p", this);
 
     std::shared_ptr<ClientProxySession> ses(new ClientProxySession(io(), std::move(*s->socket())));
     ses->setEndpoint(APP->epIp(), APP->epPort());

@@ -22,13 +22,13 @@ void ServiceControlSession::start() {
 void ServiceControlSession::readRequest() {
     auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
 
-    self->onData.connect_extended([self](const boost::signals2::connection &c, char *ptr, std::size_t) {
+    self->onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
 
         if (static_cast<ConnectionType>(ptr[0]) != ConnectionType::SERVICE_CLIENT_DATA)
             return;
 
-        if (static_cast<uint8_t>(ptr[1]) != APP->serverId())
+        if (ptr[1] != APP->serverId())
             return;
 
         self->dataSessionRequest();

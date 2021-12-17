@@ -22,6 +22,8 @@ private:
 
     uint8_t m_sessionType;
     uint8_t m_serverId;
+    std::array<uint8_t, 2> m_sendBuf;
+    //uint8_t m_sendBuf[2];
 };
 
 #endif // CLIENT_HANDSHAKE_HPP

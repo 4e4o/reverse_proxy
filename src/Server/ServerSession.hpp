@@ -22,12 +22,10 @@ public:
     void setDataSession(TSession);
 
 private:
-    void startClient();
-    void startServiceData();
-    void startServiceControl();
-
     ConnectionType m_type;
     uint8_t m_serverId;
+    int m_dataRequestsCount;
+    std::array<uint8_t, 2> m_requestBuffer;
 };
 
 #endif // SERVER_SESSION_HPP

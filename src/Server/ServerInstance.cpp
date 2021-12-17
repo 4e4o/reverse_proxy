@@ -6,11 +6,10 @@
 
 #include <boost/asio/post.hpp>
 
-#include <iostream>
-
 ServerInstance::ServerInstance(boost::asio::io_service &io)
     : Instance(io),
-      m_server(new Server<ServerSession>(io)) {
+      m_server(new Server<ServerSession>(io)),
+      m_success(1) {
 }
 
 ServerInstance::~ServerInstance() {
@@ -20,7 +19,7 @@ void ServerInstance::start() {
     m_server->setSessionInit([this](Session* s) {
         ServerSession *p = static_cast<ServerSession*>(s);
 
-        std::cout << "ServiceInstance::start new session " << p << std::endl;
+        AAP->log("ServiceInstance::start new session %p", p);
 
         p->sessionTypeDefined.connect_extended([this](const boost::signals2::connection &c,
                                                std::shared_ptr<ServerSession> s) {
@@ -58,15 +57,14 @@ void ServerInstance::onNewServiceControl(TSession s) {
 
     m_control[s->serverId()] = s;
     sendSuccess(s);
-    AAP->log("ServerInstance::onNewServiceControl %s %i", s.get(), s->serverId());
+    AAP->log("ServerInstance::onNewServiceControl %p %i", s.get(), s->serverId());
 }
 
 void ServerInstance::onServiceRequest(TSession s) {
     auto controlSession = m_control.find(s->serverId());
 
     if (controlSession == m_control.end()) {
-        std::cout << "ServerInstance::onServiceRequest no server with id " <<
-                     (int) s->serverId() << ", " << this << std::endl;
+        AAP->log("ServerInstance::onServiceRequest no server with id %i, %p", s->serverId(), this);
         return;
     }
 
@@ -76,15 +74,14 @@ void ServerInstance::onServiceRequest(TSession s) {
     m_serviceRequests[s->serverId()].push(s);
     controlSession->second->requestDataSession();
 
-    AAP->log("ServerInstance::onServiceRequest %s %i", s.get(), s->serverId());
+    AAP->log("ServerInstance::onServiceRequest %p %i", s.get(), s->serverId());
 }
 
 void ServerInstance::onServiceDataSession(TSession s) {
     auto r = m_serviceRequests.find(s->serverId());
 
     if (r == m_serviceRequests.end()) {
-        std::cout << "ServerInstance::onServiceDataSession no server with id " <<
-                     (int) s->serverId() << ", " << this << std::endl;
+        AAP->log("ServerInstance::onServiceDataSession no server with id id %i, %p", s->serverId(), this);
         return;
     }
 
@@ -115,6 +112,5 @@ void ServerInstance::sendRequesterResponse(TSession r, TSession s) {
 }
 
 void ServerInstance::sendSuccess(TSession s) {
-    uint8_t success = 1;
-    s->writeAll((char*)&success, 1);
+    s->writeAll(&m_success, 1);
 }

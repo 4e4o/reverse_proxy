@@ -1,18 +1,17 @@
 #include "Client.hpp"
 #include "Base/Network/Session.hpp"
+#include "Base/AApplication.h"
 
 #include <boost/asio/ip/tcp.hpp>
-
-#include <iostream>
 
 Client::Client(boost::asio::io_service &io_service)
     : m_strand(io_service),
       m_connectTimer(io_service) {
-    std::cout << "Client::Client " << this << std::endl;
+    AAP->log("Client::Client %p", this);
 }
 
 Client::~Client() {
-    std::cout << "Client::~Client " << this << std::endl;
+    AAP->log("Client::~Client %p", this);
 }
 
 void Client::setSession(std::shared_ptr<Session> c) {

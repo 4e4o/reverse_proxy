@@ -17,7 +17,7 @@ private:
     void onOurClose();
     void onOtherSessionWriteDone();
     void onOtherSessionClosed();
-    void writeToOther(char *ptr, std::size_t size);
+    void writeToOther(const uint8_t *ptr, std::size_t size);
 
     std::shared_ptr<ProxyDataSession> m_other;
     boost::signals2::connection m_otherOnWrite;

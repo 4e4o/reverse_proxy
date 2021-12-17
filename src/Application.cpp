@@ -4,8 +4,6 @@
 #include "Client/ClientInstance.hpp"
 #include "Service/ServiceInstance.hpp"
 
-#include <iostream>
-
 #define PROG_NAME   "reverse proxy"
 #define DAEMON      false
 

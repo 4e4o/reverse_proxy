@@ -8,8 +8,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/signals2.hpp>
 
-#include <list>
-#include <vector>
+#include <span>
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
@@ -21,11 +20,11 @@ public:
 
     virtual void readSome(std::size_t maxSize = READ_BUFFER_SIZE);
     virtual void readAll(std::size_t size);
-    virtual void writeAll(const char *ptr, std::size_t size);
+    virtual void writeAll(const uint8_t *ptr, std::size_t size);
 
     boost::asio::ip::tcp::socket* socket();
 
-    boost::signals2::signal<void (char *ptr, std::size_t size)> onData;
+    boost::signals2::signal<void (const uint8_t *ptr, std::size_t size)> onData;
     boost::signals2::signal<void (const boost::system::error_code& ec)> onError;
     boost::signals2::signal<void ()> onWriteDone;
     boost::signals2::signal<void ()> onClose;
@@ -53,8 +52,8 @@ private:
     boost::asio::io_service &m_ioService;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::io_service::strand m_strand;
-    std::array<char, READ_BUFFER_SIZE> m_readBuffer;
-    std::list<std::vector<char>> m_writeBuffers;
+    std::array<uint8_t, READ_BUFFER_SIZE> m_readBuffer;
+    std::span<const uint8_t> m_writeSpan;
     bool m_writing;
     bool m_closeOnWrite;
     bool m_closed;

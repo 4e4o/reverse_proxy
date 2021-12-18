@@ -3,10 +3,6 @@
 #include "Protocol/ClientHandshake.hpp"
 #include "Application.hpp"
 
-ServiceControlSession::ServiceControlSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : Session(io_service, std::move(sock)) {
-}
-
 void ServiceControlSession::start() {
     auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
     std::shared_ptr<ClientHandshake> h(new ClientHandshake(static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId()));

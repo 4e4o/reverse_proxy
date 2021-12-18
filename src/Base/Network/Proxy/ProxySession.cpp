@@ -1,14 +1,11 @@
 #include "ProxySession.hpp"
 #include "Base/Network/Client.hpp"
 
-ProxySession::ProxySession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : ProxyDataSession(io_service, std::move(sock)),
-      m_outgoing(new Client(io_service)) {
+ProxySession::~ProxySession() {
 }
 
 ProxyDataSession* ProxySession::createClientSession() {
-    boost::asio::io_service &io = ioService();
-    return new ProxyDataSession(io, boost::asio::ip::tcp::socket(io));
+    return new ProxyDataSession(io());
 }
 
 void ProxySession::startProxying(std::shared_ptr<ProxyDataSession> session) {
@@ -17,6 +14,8 @@ void ProxySession::startProxying(std::shared_ptr<ProxyDataSession> session) {
 }
 
 void ProxySession::start() {
+    m_outgoing.reset(new Client(io()));
+
     std::shared_ptr<ProxyDataSession> clientSession(createClientSession());
     auto self = std::dynamic_pointer_cast<ProxySession>(shared_from_this());
 
@@ -38,8 +37,4 @@ void ProxySession::start() {
 void ProxySession::setEndpoint(const std::string &ip, int port) {
     m_ip = ip;
     m_port = port;
-}
-
-std::shared_ptr<Client> ProxySession::client() const {
-    return m_outgoing;
 }

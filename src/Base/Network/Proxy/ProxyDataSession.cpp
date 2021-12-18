@@ -1,9 +1,5 @@
 #include "ProxyDataSession.hpp"
 
-ProxyDataSession::ProxyDataSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : Session(io_service, std::move(sock)) {
-}
-
 ProxyDataSession::~ProxyDataSession() {
     m_otherOnWrite.disconnect();
     m_otherOnClose.disconnect();

@@ -27,7 +27,7 @@ void ClientHandshake::onSessionTypeSended(TSession s) {
     s->onData.connect_extended([self, s](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
         const uint8_t success = ptr[0];
-        AAP->log("ClientHandshake success = %i", success);
+//        AAP->log("ClientHandshake success = %i", success);
 
         if (success) {
             self->onSuccessResponse();

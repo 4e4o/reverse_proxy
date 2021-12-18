@@ -8,7 +8,7 @@ class ServerSession : public ProxyDataSession {
 public:
     typedef std::shared_ptr<ServerSession> TSession;
 
-    ServerSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock);
+    using ProxyDataSession::ProxyDataSession;
     ~ServerSession();
 
     void start() override final;

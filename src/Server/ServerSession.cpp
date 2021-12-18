@@ -1,15 +1,7 @@
 #include "ServerSession.hpp"
 #include "Base/AApplication.h"
 
-ServerSession::ServerSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : ProxyDataSession(io_service, std::move(sock)),
-      m_serverId(0),
-      m_dataRequestsCount(0) {
-    AAP->log("ServerSession::ServerSession %p", this);
-}
-
 ServerSession::~ServerSession() {
-    AAP->log("ServerSession::~ServerSession %p", this);
 }
 
 ConnectionType ServerSession::type() const {
@@ -25,6 +17,8 @@ void ServerSession::start() {
 
     onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
+
+        self->m_dataRequestsCount = 0;
         self->m_type = static_cast<ConnectionType>(ptr[0]);
         self->m_serverId = ptr[1];
 

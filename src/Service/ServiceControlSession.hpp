@@ -7,7 +7,7 @@ class ClientHandshake;
 
 class ServiceControlSession : public Session {
 public:
-    ServiceControlSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock);
+    using Session::Session;
 
     void start() override final;
 

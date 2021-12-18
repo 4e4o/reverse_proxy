@@ -4,8 +4,12 @@
 #include <boost/asio/write.hpp>
 #include <boost/asio/read.hpp>
 
+Session::Session(boost::asio::io_service &io)
+    : Session(io, boost::asio::ip::tcp::socket(io)) {
+}
+
 Session::Session(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : m_ioService(io_service),
+    : m_io(io_service),
       m_socket(std::move(sock)),
       m_strand(io_service),
       m_writing(false),
@@ -54,7 +58,7 @@ void Session::readSome(std::size_t maxSize) {
             return;
         }
 
-        //                    AAP->log("REEEEEAD %i %x %p", bytes_transferred, self->m_readBuffer.data()[0] & 0xFF, self.get());
+        // AAP->log("REEEEEAD %i %x %p", bytes_transferred, self->m_readBuffer.data()[0] & 0xFF, self.get());
         self->onData(self->m_readBuffer.data(), bytes_transferred);
     }));
 }
@@ -83,28 +87,30 @@ void Session::doWrite() {
                 m_socket, boost::asio::buffer(m_writeSpan.data(), m_writeSpan.size()),
                 m_strand.wrap([self](boost::system::error_code ec,
                               std::size_t bytes_transferred) {
-        if (self->m_closed)
-            return;
+                    if (self->m_closed) {
+                        return;
+                    }
 
-        if (ec || (self->m_writeSpan.size() != bytes_transferred)) {
-            self->errorHandler(ec);
-            return;
-        }
+                    if (ec || (self->m_writeSpan.size() != bytes_transferred)) {
+                        self->errorHandler(ec);
+                        return;
+                    }
 
-        self->m_writing = false;
-        self->onWriteDone();
+                    self->m_writing = false;
+                    self->onWriteDone();
 
-        if (self->m_closeOnWrite)
-            self->closeOnWrite();
-    }));
+                    if (self->m_closeOnWrite) {
+                        self->closeOnWrite();
+                    }
+                }));
 }
 
 boost::asio::ip::tcp::socket* Session::socket() {
     return &m_socket;
 }
 
-boost::asio::io_service &Session::ioService() {
-    return m_ioService;
+boost::asio::io_service &Session::io() {
+    return m_io;
 }
 
 void Session::errorHandler(const boost::system::error_code& ec) {
@@ -136,7 +142,7 @@ void Session::close() {
             self->m_closed = true;
             self->onClose();
             self->disconnectAllSlots();
-            AAP->log("socket close ok %p", self.get());
+            //            AAP->log("socket close ok %p", self.get());
         } catch (std::exception& e) {
             AAP->log("socket close exception: %p, %s", self.get(), e.what());
         }
@@ -157,7 +163,7 @@ void Session::closeOnWrite() {
     post([self]() {
         self->m_closeOnWrite = true;
 
-        AAP->log("Session::closeOnWrite %p %i", self.get(), self->m_writing);
+        //        AAP->log("Session::closeOnWrite %p %i", self.get(), self->m_writing);
 
         if (!self->m_writing)
             self->close();

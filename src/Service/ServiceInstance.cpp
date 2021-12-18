@@ -14,7 +14,7 @@ ServiceInstance::~ServiceInstance() {
 }
 
 void ServiceInstance::start() {
-    std::shared_ptr<ServiceControlSession> s(new ServiceControlSession(io(), boost::asio::ip::tcp::socket(io())));
+    std::shared_ptr<ServiceControlSession> s(new ServiceControlSession(io()));
     std::shared_ptr<Client> cl(new Client(io()));
     cl->setSession(s);
 
@@ -51,7 +51,7 @@ void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s
 void ServiceInstance::startDataChannels() {
     AAP->log("ServiceInstance::startDataChannels %p", this);
 
-    std::shared_ptr<Session> s(new Session(io(), boost::asio::ip::tcp::socket(io())));
+    std::shared_ptr<Session> s(new Session(io()));
     std::shared_ptr<Client> cl(new Client(io()));
     cl->setSession(s);
 

@@ -35,12 +35,7 @@ void Client::connect(std::string ip, unsigned short port) {
     m_session->socket()->async_connect(endpoint,
                                        m_strand.wrap([self](const error_code& ec) {
         self->m_connectTimer.cancel();
-
-        if (ec) {
-            self->onConnect(false);
-        } else {
-            self->onConnect(true);
-        }
+        self->onConnect(!ec);
     }));
 
     m_connectTimer.expires_after(boost::asio::chrono::seconds(CONNECT_TIMEOUT_SEC));

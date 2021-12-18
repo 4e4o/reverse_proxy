@@ -5,7 +5,7 @@
 
 class ClientProxySession : public ProxySession {
 public:
-    ClientProxySession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock);
+    using ProxySession::ProxySession;
     ~ClientProxySession();
 
     void setSessionType(const uint8_t &sessionType);

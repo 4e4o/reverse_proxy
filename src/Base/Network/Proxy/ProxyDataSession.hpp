@@ -7,7 +7,7 @@
 
 class ProxyDataSession : public Session {
 public:
-    ProxyDataSession(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock);
+    using Session::Session;
     ~ProxyDataSession();
 
     void setOther(std::shared_ptr<ProxyDataSession>);

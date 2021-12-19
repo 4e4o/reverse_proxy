@@ -32,8 +32,8 @@ void Client::connect(std::string ip, unsigned short port) {
     tcp::endpoint endpoint(address_v4::from_string(ip), port);
     auto self = shared_from_this();
 
-    m_session->socket()->async_connect(endpoint,
-                                       m_strand.wrap([self](const error_code& ec) {
+    m_session->socket().async_connect(endpoint,
+                                      m_strand.wrap([self](const error_code& ec) {
         self->m_connectTimer.cancel();
         self->onConnect(!ec);
     }));

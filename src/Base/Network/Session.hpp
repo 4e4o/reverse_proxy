@@ -9,12 +9,13 @@
 #include <boost/signals2.hpp>
 #include <boost/array.hpp>
 
+#include "Base/Network/TCPSocket.hpp"
 #include "Base/Span.hpp"
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
-    Session(boost::asio::io_service &io_service);
-    Session(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock);
+    Session(boost::asio::io_service &io);
+    Session(boost::asio::io_service &io, TCPSocket&& sock);
     virtual ~Session();
 
     virtual void start();
@@ -24,7 +25,7 @@ public:
     virtual void readAll(std::size_t size);
     virtual void writeAll(const uint8_t *ptr, std::size_t size);
 
-    boost::asio::ip::tcp::socket* socket();
+    TCPSocket& socket();
 
     boost::signals2::signal<void (const uint8_t *ptr, std::size_t size)> onData;
     boost::signals2::signal<void (const boost::system::error_code& ec)> onError;
@@ -52,7 +53,7 @@ private:
     void disconnectAllSlots();
 
     boost::asio::io_service &m_io;
-    boost::asio::ip::tcp::socket m_socket;
+    TCPSocket m_socket;
     boost::asio::io_service::strand m_strand;
     std::array<uint8_t, READ_BUFFER_SIZE> m_readBuffer;
     span<const uint8_t> m_writeSpan;

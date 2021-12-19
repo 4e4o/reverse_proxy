@@ -69,7 +69,7 @@ void ServiceInstance::startDataChannels() {
 void ServiceInstance::startDataClient(std::shared_ptr<Session> s) {
     AAP->log("ServiceInstance::startDataClient %p", this);
 
-    std::shared_ptr<ClientProxySession> ses(new ClientProxySession(io(), std::move(*s->socket())));
+    std::shared_ptr<ClientProxySession> ses(new ClientProxySession(io(), std::move(s->socket())));
     ses->setEndpoint(APP->epIp(), APP->epPort());
     ses->setSessionType(static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA));
     ses->start();

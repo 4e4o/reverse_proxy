@@ -8,6 +8,7 @@
 
 #include <boost/signals2.hpp>
 
+#include "Base/Network/TCPSocket.hpp"
 #include "IServer.hpp"
 
 template<class Session>
@@ -15,16 +16,16 @@ class Server : public IServer {
 public:
     using Acceptor = boost::asio::ip::tcp::acceptor;
 
-    Server(boost::asio::io_service &io_service)
-        : m_ioService(io_service),
-          m_acceptor(m_ioService),
-          m_socket(io_service),
-          m_strand(io_service),
+    Server(boost::asio::io_service &io)
+        : m_io(io),
+          m_acceptor(io),
+          m_socket(io),
+          m_strand(io),
           m_stopped(false) {
     }
 
     void start(const std::string& ip, unsigned short port) override {
-        m_acceptor = Acceptor(m_ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(ip), port));
+        m_acceptor = Acceptor(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(ip), port));
         doAccept();
     }
 
@@ -42,7 +43,7 @@ public:
 protected:
     template <class Callable>
     void post(Callable&& c) {
-        boost::asio::post(m_ioService, m_strand.wrap(std::move(c)));
+        boost::asio::post(m_io, m_strand.wrap(std::move(c)));
     }
 
 private:
@@ -53,7 +54,7 @@ private:
                 return;
 
             if (!ec) {
-                auto session = std::make_shared<Session>(m_ioService, std::move(m_socket));
+                auto session = std::make_shared<Session>(m_io, std::move(TCPSocket(std::move(m_socket))));
                 auto initEvent = sessionInit();
 
                 if (initEvent)
@@ -85,7 +86,7 @@ private:
 
     boost::signals2::signal<void ()> closeAllSessions;
 
-    boost::asio::io_service &m_ioService;
+    boost::asio::io_service &m_io;
     Acceptor m_acceptor;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::io_service::strand m_strand;

@@ -5,13 +5,13 @@
 #include <boost/asio/read.hpp>
 
 Session::Session(boost::asio::io_service &io)
-    : Session(io, boost::asio::ip::tcp::socket(io)) {
+    : Session(io, TCPSocket(io)) {
 }
 
-Session::Session(boost::asio::io_service &io_service, boost::asio::ip::tcp::socket&& sock)
-    : m_io(io_service),
+Session::Session(boost::asio::io_service &io, TCPSocket &&sock)
+    : m_io(io),
       m_socket(std::move(sock)),
-      m_strand(io_service),
+      m_strand(io),
       m_writing(false),
       m_closeOnWrite(false),
       m_closed(false) {
@@ -105,8 +105,8 @@ void Session::doWrite() {
                 }));
 }
 
-boost::asio::ip::tcp::socket* Session::socket() {
-    return &m_socket;
+TCPSocket& Session::socket() {
+    return m_socket;
 }
 
 boost::asio::io_service &Session::io() {

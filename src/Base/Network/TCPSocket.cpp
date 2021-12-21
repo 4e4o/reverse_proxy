@@ -21,19 +21,35 @@ TCPSocket::TCPSocket(boost::asio::io_service &io)
     : m_ssl(false),
       m_sslContext(initContext()),
       m_socket(io, m_sslContext) {
-}
-
-TCPSocket::TCPSocket(TCPSocket&& socket)
-    : TCPSocket(std::move(socket.m_socket.next_layer())) {
+    initSocket();
 }
 
 TCPSocket::TCPSocket(boost::asio::ip::tcp::socket&& socket)
     : m_ssl(false),
       m_sslContext(initContext()),
       m_socket(std::move(socket), m_sslContext) {
+    initSocket();
+}
+
+TCPSocket::TCPSocket(TCPSocket&& socket)
+    : TCPSocket(std::move(socket.m_socket.next_layer())) {
 }
 
 TCPSocket::~TCPSocket() {
+}
+
+void TCPSocket::initSocket() {
+    using boost::asio::ip::tcp;
+    using boost::asio::socket_base;
+    using boost::asio::detail::socket_option::integer;
+
+    auto& socket = m_socket.next_layer();
+
+    socket.set_option(tcp::no_delay(true));
+    socket.set_option(socket_base::keep_alive(true));
+    socket.set_option(integer<SOL_TCP, TCP_KEEPIDLE>(20));      // secs before keepalive probes
+    socket.set_option(integer<SOL_TCP, TCP_KEEPINTVL>(10));     // interval between keepalive
+    socket.set_option(integer<SOL_TCP, TCP_KEEPCNT>(4));        // failed keepalive before declaring dead
 }
 
 void TCPSocket::close() {

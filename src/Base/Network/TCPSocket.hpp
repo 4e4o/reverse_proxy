@@ -11,8 +11,8 @@ public:
     typedef std::function<void(bool)> TInitResult;
 
     TCPSocket(boost::asio::io_service &io);
-    TCPSocket(TCPSocket&& socket);
     TCPSocket(boost::asio::ip::tcp::socket&& socket);
+    TCPSocket(TCPSocket&& socket);
     virtual ~TCPSocket();
 
     void initSSL(boost::asio::ssl::stream_base::handshake_type,
@@ -43,6 +43,8 @@ public:
     void close();
 
 private:
+    void initSocket();
+
     bool m_ssl;
     boost::asio::ssl::context m_sslContext;
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;

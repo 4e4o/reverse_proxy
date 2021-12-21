@@ -1,20 +1,18 @@
 #ifndef CLIENT_HANDSHAKE_HPP
 #define CLIENT_HANDSHAKE_HPP
 
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/signals2.hpp>
+#include <memory>
 
 class Session;
 
-class ClientHandshake : public std::enable_shared_from_this<ClientHandshake> {
+class ClientHandshake {
 public:
     typedef std::shared_ptr<Session> TSession;
 
-    ClientHandshake(uint8_t type, uint8_t id);
+    void startHandshake(TSession, uint8_t, uint8_t);
 
-    void start(TSession);
-
-    boost::signals2::signal<void()> onSuccessResponse;
+protected:
+    virtual void onHandshakeDone(TSession) = 0;
 
 private:
     void sendSessionType(TSession s);
@@ -23,7 +21,6 @@ private:
     uint8_t m_sessionType;
     uint8_t m_serverId;
     std::array<uint8_t, 2> m_sendBuf;
-    //uint8_t m_sendBuf[2];
 };
 
 #endif // CLIENT_HANDSHAKE_HPP

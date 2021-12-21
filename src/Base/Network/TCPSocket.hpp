@@ -8,22 +8,16 @@
 class TCPSocket {
 public:
     typedef typename boost::asio::io_service::executor_type executor_type;
+    typedef std::function<void(bool)> TInitResult;
 
-    TCPSocket(boost::asio::io_service &io)
-        : m_ssl(false),
-          m_sslContext(boost::asio::ssl::context::tls),
-          m_socket(io, m_sslContext) {
-    }
+    TCPSocket(boost::asio::io_service &io);
+    TCPSocket(TCPSocket&& socket);
+    TCPSocket(boost::asio::ip::tcp::socket&& socket);
+    virtual ~TCPSocket();
 
-    TCPSocket(TCPSocket&& socket)
-        : TCPSocket(std::move(socket.m_socket.next_layer())) {
-    }
-
-    TCPSocket(boost::asio::ip::tcp::socket&& socket)
-        : m_ssl(false),
-          m_sslContext(boost::asio::ssl::context::tls),
-          m_socket(std::move(socket), m_sslContext) {
-    }
+    void initSSL(boost::asio::ssl::stream_base::handshake_type,
+                 const std::string& verifyHost, TInitResult);
+    void setSSL(bool);
 
     template<typename... Args>
     void async_read_some(Args&&... args) {
@@ -46,9 +40,7 @@ public:
         m_socket.next_layer().async_connect(std::forward<Args>(args)...);
     }
 
-    void close() {
-        m_socket.next_layer().close();
-    }
+    void close();
 
 private:
     bool m_ssl;

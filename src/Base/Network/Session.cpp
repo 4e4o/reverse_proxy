@@ -109,6 +109,21 @@ TCPSocket& Session::socket() {
     return m_socket;
 }
 
+void Session::startSSL(bool client, const std::string& verifyHost, TEvent r) {
+    auto self = shared_from_this();
+
+    socket().initSSL(client ? boost::asio::ssl::stream_base::handshake_type::client :
+                              boost::asio::ssl::stream_base::handshake_type::server,
+                     verifyHost, [self, r](bool success) {
+        if (!success) {
+            self->close();
+            return;
+        }
+
+        r();
+    });
+}
+
 boost::asio::io_service &Session::io() {
     return m_io;
 }

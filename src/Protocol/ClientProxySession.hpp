@@ -2,8 +2,9 @@
 #define CLIENT_PROXY_SESSION_HPP
 
 #include "Base/Network/Proxy/ProxySession.hpp"
+#include "Protocol/ClientHandshake.hpp"
 
-class ClientProxySession : public ProxySession {
+class ClientProxySession : public ProxySession, public ClientHandshake {
 public:
     using ProxySession::ProxySession;
     ~ClientProxySession();
@@ -12,6 +13,7 @@ public:
 
 private:
     void startProxying(std::shared_ptr<ProxyDataSession> session) override final;
+    void onHandshakeDone(TSession) override final;
 
     uint8_t m_sessionType;
 };

@@ -14,12 +14,16 @@
 
 class Session : public std::enable_shared_from_this<Session> {
 public:
+    typedef std::function<void()> TEvent;
+
     Session(boost::asio::io_service &io);
     Session(boost::asio::io_service &io, TCPSocket&& sock);
     virtual ~Session();
 
     virtual void start();
     void close();
+
+    void startSSL(bool client, const std::string& verifyHost, TEvent);
 
     virtual void readSome(std::size_t maxSize = READ_BUFFER_SIZE);
     virtual void readAll(std::size_t size);

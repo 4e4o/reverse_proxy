@@ -2,19 +2,16 @@
 #include "Base/Network/Session.hpp"
 #include "Base/AApplication.h"
 
-ClientHandshake::ClientHandshake(uint8_t type, uint8_t id)
-    : m_sessionType(type), m_serverId(id) { }
-
-void ClientHandshake::start(TSession s) {
+void ClientHandshake::startHandshake(TSession s, uint8_t type, uint8_t serverId) {
+    m_serverId = serverId;
+    m_sessionType = type;
     sendSessionType(s);
 }
 
 void ClientHandshake::sendSessionType(TSession s) {
-    auto self = shared_from_this();
-
-    s->onWriteDone.connect_extended([self, s](const boost::signals2::connection &c) {
+    s->onWriteDone.connect_extended([this, s](const boost::signals2::connection &c) {
         c.disconnect();
-        self->onSessionTypeSended(s);
+        onSessionTypeSended(s);
     });
 
     m_sendBuf = {m_sessionType, m_serverId};
@@ -22,15 +19,13 @@ void ClientHandshake::sendSessionType(TSession s) {
 }
 
 void ClientHandshake::onSessionTypeSended(TSession s) {
-    auto self = shared_from_this();
-
-    s->onData.connect_extended([self, s](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
+    s->onData.connect_extended([this, s](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
         const uint8_t success = ptr[0];
-//        AAP->log("ClientHandshake success = %i", success);
+        AAP->log("ClientHandshake success = %i", success);
 
         if (success) {
-            self->onSuccessResponse();
+            onHandshakeDone(s);
         } else {
             s->close();
         }

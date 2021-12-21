@@ -14,6 +14,13 @@ uint8_t ServerSession::serverId() const {
 
 void ServerSession::start() {
     auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    startSSL(false, "client1", [self]() {
+        self->readClientType();
+    });
+}
+
+void ServerSession::readClientType() {
+    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
 
     onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
@@ -47,6 +54,9 @@ void ServerSession::setDataSession(TSession s) {
     post([self, s]() {
         AAP->log("ServerSession::setDataSession %p %p", s.get(), self.get());
 
+        // remove encryption layer
+        self->socket().setSSL(false);
+        s->socket().setSSL(false);
         self->setOther(s);
         self->ProxyDataSession::start();
         s->ProxyDataSession::start();

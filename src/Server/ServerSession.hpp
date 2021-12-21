@@ -22,6 +22,8 @@ public:
     void setDataSession(TSession);
 
 private:
+    void readClientType();
+
     ConnectionType m_type;
     uint8_t m_serverId;
     int m_dataRequestsCount;

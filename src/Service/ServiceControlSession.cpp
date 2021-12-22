@@ -2,7 +2,7 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
-void ServiceControlSession::start() {
+void ServiceControlSession::startImpl() {
     auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
     startSSL(true, "server1", [self]() {
         self->onSSLInitDone();
@@ -11,7 +11,7 @@ void ServiceControlSession::start() {
 
 void ServiceControlSession::onSSLInitDone() {
     auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
-    startHandshake(self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId());
+    startHandshake(self, self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId());
 }
 
 void ServiceControlSession::onHandshakeDone(TSession) {

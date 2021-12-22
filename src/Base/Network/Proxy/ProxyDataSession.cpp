@@ -1,8 +1,19 @@
 #include "ProxyDataSession.hpp"
+#include "Base/AApplication.h"
 
 ProxyDataSession::~ProxyDataSession() {
     m_otherOnWrite.disconnect();
     m_otherOnClose.disconnect();
+}
+
+void ProxyDataSession::startProxying(std::shared_ptr<ProxyDataSession> session, bool startSession) {
+    AAP->log("ProxyDataSession::startProxying %p", this);
+
+    setOther(session);
+    ProxyDataSession::startImpl();
+
+    if (startSession)
+        session->start();
 }
 
 void ProxyDataSession::setOther(std::shared_ptr<ProxyDataSession> ps) {
@@ -13,7 +24,7 @@ void ProxyDataSession::setOther(std::shared_ptr<ProxyDataSession> ps) {
     m_other->setOther(std::dynamic_pointer_cast<ProxyDataSession>(shared_from_this()));
 }
 
-void ProxyDataSession::start() {
+void ProxyDataSession::startImpl() {
     if (m_other == nullptr)
         return;
 

@@ -12,7 +12,7 @@ public:
     void setSessionType(const uint8_t &sessionType);
 
 private:
-    void startProxying(std::shared_ptr<ProxyDataSession> session) override final;
+    void startProxying(std::shared_ptr<ProxyDataSession> session, bool startSession = true) override final;
     void onHandshakeDone(TSession) override final;
 
     uint8_t m_sessionType;

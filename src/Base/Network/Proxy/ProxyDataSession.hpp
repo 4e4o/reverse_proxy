@@ -11,13 +11,16 @@ public:
     ~ProxyDataSession();
 
     void setOther(std::shared_ptr<ProxyDataSession>);
-    virtual void start() override;
+
+protected:
+    virtual void startProxying(std::shared_ptr<ProxyDataSession> session, bool startSession = true);
 
 private:
     void onOurClose();
     void onOtherSessionWriteDone();
     void onOtherSessionClosed();
     void writeToOther(const uint8_t *ptr, std::size_t size);
+    void startImpl() override;
 
     std::shared_ptr<ProxyDataSession> m_other;
     boost::signals2::connection m_otherOnWrite;

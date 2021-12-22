@@ -21,14 +21,12 @@ TCPSocket::TCPSocket(boost::asio::io_service &io)
     : m_ssl(false),
       m_sslContext(initContext()),
       m_socket(io, m_sslContext) {
-    initSocket();
 }
 
 TCPSocket::TCPSocket(boost::asio::ip::tcp::socket&& socket)
     : m_ssl(false),
       m_sslContext(initContext()),
       m_socket(std::move(socket), m_sslContext) {
-    initSocket();
 }
 
 TCPSocket::TCPSocket(TCPSocket&& socket)
@@ -38,7 +36,7 @@ TCPSocket::TCPSocket(TCPSocket&& socket)
 TCPSocket::~TCPSocket() {
 }
 
-void TCPSocket::initSocket() {
+void TCPSocket::init() {
     using boost::asio::ip::tcp;
     using boost::asio::socket_base;
     using boost::asio::detail::socket_option::integer;
@@ -53,6 +51,9 @@ void TCPSocket::initSocket() {
 }
 
 void TCPSocket::close() {
+    if (m_ssl)
+        m_socket.shutdown();
+
     m_socket.next_layer().close();
 }
 

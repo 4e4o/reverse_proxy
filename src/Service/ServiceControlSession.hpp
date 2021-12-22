@@ -8,11 +8,10 @@ class ServiceControlSession : public Session, public ClientHandshake {
 public:
     using Session::Session;
 
-    void start() override final;
-
     boost::signals2::signal<void()> dataSessionRequest;
 
 private:
+    void startImpl() override final;
     void onHandshakeDone(TSession) override final;
     void onSSLInitDone();
     void doHandshake();

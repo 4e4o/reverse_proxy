@@ -12,7 +12,7 @@ uint8_t ServerSession::serverId() const {
     return m_serverId;
 }
 
-void ServerSession::start() {
+void ServerSession::startImpl() {
     auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
     startSSL(false, "client1", [self]() {
         self->readClientType();
@@ -50,16 +50,17 @@ void ServerSession::readClientType() {
 
 void ServerSession::setDataSession(TSession s) {
     auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    auto other = std::dynamic_pointer_cast<ServerSession>(s);
 
-    post([self, s]() {
-        AAP->log("ServerSession::setDataSession %p %p", s.get(), self.get());
+    post([self, other]() {
+        AAP->log("ServerSession::setDataSession %p %p", other.get(), self.get());
 
         // remove encryption layer
         self->socket().setSSL(false);
-        s->socket().setSSL(false);
-        self->setOther(s);
-        self->ProxyDataSession::start();
-        s->ProxyDataSession::start();
+        other->socket().setSSL(false);
+
+        self->ProxyDataSession::startProxying(other, false);
+        other->ProxyDataSession::startProxying(self, false);
     });
 }
 // --------------

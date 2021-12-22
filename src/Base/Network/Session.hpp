@@ -20,7 +20,7 @@ public:
     Session(boost::asio::io_service &io, TCPSocket&& sock);
     virtual ~Session();
 
-    virtual void start();
+    void start();
     void close();
 
     void startSSL(bool client, const std::string& verifyHost, TEvent);
@@ -41,6 +41,7 @@ public:
 protected:
     boost::asio::io_service &io();
 
+    virtual void startImpl();
     void closeOnWrite();
 
     template <class Callable>

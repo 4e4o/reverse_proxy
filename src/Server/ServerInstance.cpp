@@ -55,9 +55,24 @@ void ServerInstance::onNewServiceControl(TSession s) {
         m_control.erase(s->serverId());
     }
 
+    s->onData.connect_extended([](const boost::signals2::connection &c, const uint8_t*, std::size_t) {
+        c.disconnect();
+        AAP->log("ServerInstance::onServiceDataSession onData SHOULD NEVER HAPPEN. FIX IT!!!!!");
+    });
+
+    s->onClose.connect_extended([this, s](const boost::signals2::connection &c) {
+        c.disconnect();
+        m_control.erase(s->serverId());
+        AAP->log("ServerInstance::onNewServiceControl onClose %p %i", s.get(), s->serverId());
+    });
+
     m_control[s->serverId()] = s;
     sendSuccess(s);
     AAP->log("ServerInstance::onNewServiceControl %p %i", s.get(), s->serverId());
+
+    // читаем что-нибудь чтоб определить дохлое соединение
+    // никаких данных мы тут не получаем
+    s->readSome();
 }
 
 void ServerInstance::onServiceRequest(TSession s) {

@@ -24,6 +24,11 @@ Session::~Session() {
 }
 
 void Session::start() {
+    m_socket.init();
+    startImpl();
+}
+
+void Session::startImpl() {
 }
 
 void Session::readAll(std::size_t size) {
@@ -157,7 +162,7 @@ void Session::close() {
             self->m_closed = true;
             self->onClose();
             self->disconnectAllSlots();
-            //            AAP->log("socket close ok %p", self.get());
+            //AAP->log("socket close ok %p", self.get());
         } catch (std::exception& e) {
             AAP->log("socket close exception: %p, %s", self.get(), e.what());
         }

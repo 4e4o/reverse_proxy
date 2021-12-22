@@ -11,8 +11,6 @@ public:
     using ProxyDataSession::ProxyDataSession;
     ~ServerSession();
 
-    void start() override final;
-
     boost::signals2::signal<void(TSession)> sessionTypeDefined;
 
     ConnectionType type() const;
@@ -23,6 +21,7 @@ public:
 
 private:
     void readClientType();
+    void startImpl() override final;
 
     ConnectionType m_type;
     uint8_t m_serverId;

@@ -13,12 +13,11 @@ public:
     using ProxyDataSession::ProxyDataSession;
     ~ProxySession();
 
-    void start() override;
     void setEndpoint(const std::string&, int port);
 
 protected:
+    void startImpl() override;
     virtual ProxyDataSession* createClientSession();
-    virtual void startProxying(std::shared_ptr<ProxyDataSession> session);
 
 private:
     std::shared_ptr<Client> m_outgoing;

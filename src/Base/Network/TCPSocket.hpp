@@ -42,9 +42,9 @@ public:
 
     void close();
 
-private:
-    void initSocket();
+    void init();
 
+private:
     bool m_ssl;
     boost::asio::ssl::context m_sslContext;
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;

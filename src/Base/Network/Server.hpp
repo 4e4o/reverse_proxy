@@ -9,10 +9,9 @@
 #include <boost/signals2.hpp>
 
 #include "Base/Network/TCPSocket.hpp"
-#include "IServer.hpp"
 
 template<class Session>
-class Server : public IServer {
+class Server {
 public:
     using Acceptor = boost::asio::ip::tcp::acceptor;
 
@@ -24,12 +23,12 @@ public:
           m_stopped(false) {
     }
 
-    void start(const std::string& ip, unsigned short port) override {
+    void start(const std::string& ip, unsigned short port) {
         m_acceptor = Acceptor(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(ip), port));
         doAccept();
     }
 
-    void stop() override {
+    void stop() {
         post([this]() {
             if (m_stopped)
                 return;
@@ -38,6 +37,12 @@ public:
             m_acceptor.cancel();
             closeAllSessions();
         });
+    }
+
+    typedef std::function<void(Session*)> TSessionInitEvent;
+
+    void setSessionInit(TSessionInitEvent&& e) {
+        m_sessionInit = std::move(e);
     }
 
 protected:
@@ -55,10 +60,9 @@ private:
 
             if (!ec) {
                 auto session = std::make_shared<Session>(m_io, std::move(TCPSocket(std::move(m_socket))));
-                auto initEvent = sessionInit();
 
-                if (initEvent)
-                    initEvent(session.get());
+                if (m_sessionInit)
+                    m_sessionInit(session.get());
 
                 std::weak_ptr<Session> weak_session = session;
 
@@ -91,6 +95,7 @@ private:
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::io_service::strand m_strand;
     bool m_stopped;
+    TSessionInitEvent m_sessionInit;
 };
 
 #endif // SERVER_H

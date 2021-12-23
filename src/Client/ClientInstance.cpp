@@ -10,10 +10,9 @@ ClientInstance::ClientInstance(boost::asio::io_service &io)
 }
 
 void ClientInstance::start() {
-    m_server->setSessionInit([](Session* s) {
-        ClientProxySession *p = static_cast<ClientProxySession*>(s);
-        p->setEndpoint(APP->epIp(), APP->epPort());
-        p->setSessionType(static_cast<uint8_t>(ConnectionType::CLIENT));
+    m_server->setSessionInit([](ClientProxySession* session) {
+        session->setEndpoint(APP->epIp(), APP->epPort());
+        session->setSessionType(static_cast<uint8_t>(ConnectionType::CLIENT));
     });
 
     m_server->start(APP->ip(), APP->port());

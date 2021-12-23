@@ -72,7 +72,7 @@ void TCPSocket::initSSL(boost::asio::ssl::stream_base::handshake_type type,
 
     m_socket.async_handshake(type,
                              [r] (boost::system::error_code error) {
-        AAP->log("AAAA %s", error.message().c_str());
+        AAP->log("initSSL async_handshake error = %s", error.message().c_str());
         r(!error);
     });
 }

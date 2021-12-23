@@ -6,8 +6,8 @@
 #include <map>
 #include <queue>
 
-class IServer;
 class ServerSession;
+template<class Session> class Server;
 
 class ServerInstance : public Instance {
 public:
@@ -27,7 +27,7 @@ private:
     void sendRequesterResponse(TSession, TSession);
     void sendSuccess(TSession);
 
-    std::shared_ptr<IServer> m_server;
+    std::shared_ptr<Server<ServerSession>> m_server;
     std::map<uint8_t, TSession> m_control;
     std::map<uint8_t, TSessionQueue> m_serviceRequests;
     const uint8_t m_success;

@@ -3,7 +3,8 @@
 
 #include "Instance.hpp"
 
-class IServer;
+class ClientProxySession;
+template<class Session> class Server;
 
 class ClientInstance : public Instance {
 public:
@@ -13,7 +14,7 @@ private:
     void start() override final;
     void stop() override final;
 
-    std::shared_ptr<IServer> m_server;
+    std::shared_ptr<Server<ClientProxySession>> m_server;
 };
 
 #endif // CLIENT_INSTANCE_HPP

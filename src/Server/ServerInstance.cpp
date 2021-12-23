@@ -18,13 +18,11 @@ ServerInstance::~ServerInstance() {
 }
 
 void ServerInstance::start() {
-    m_server->setSessionInit([this](Session* s) {
-        ServerSession *p = static_cast<ServerSession*>(s);
+    m_server->setSessionInit([this](ServerSession* session) {
+        AAP->log("ServiceInstance::start new session %p", session);
 
-        AAP->log("ServiceInstance::start new session %p", p);
-
-        p->sessionTypeDefined.connect_extended([this](const connection &c,
-                                               std::shared_ptr<ServerSession> s) {
+        session->sessionTypeDefined.connect_extended([this](const connection &c,
+                                                     std::shared_ptr<ServerSession> s) {
             c.disconnect();
             post([s, this]() {
                 switch(s->type()) {

@@ -1,6 +1,8 @@
 #include "ServerSession.hpp"
 #include "Base/AApplication.h"
 
+using boost::signals2::connection;
+
 ServerSession::~ServerSession() {
 }
 
@@ -22,7 +24,7 @@ void ServerSession::startImpl() {
 void ServerSession::readClientType() {
     auto self = shared_from_this<ServerSession>();
 
-    onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
+    onData.connect_extended([self](const connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
 
         self->m_dataRequestsCount = 0;
@@ -71,7 +73,7 @@ void ServerSession::requestDataSession() {
     auto self = shared_from_this<ServerSession>();
 
     post([self]() {
-        self->onWriteDone.connect_extended([self](const boost::signals2::connection &c) {
+        self->onWriteDone.connect_extended([self](const connection &c) {
             c.disconnect();
             self->m_dataRequestsCount--;
 

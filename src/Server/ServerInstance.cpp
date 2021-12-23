@@ -6,6 +6,8 @@
 
 #include <boost/asio/post.hpp>
 
+using boost::signals2::connection;
+
 ServerInstance::ServerInstance(boost::asio::io_service &io)
     : Instance(io),
       m_server(new Server<ServerSession>(io)),
@@ -21,7 +23,7 @@ void ServerInstance::start() {
 
         AAP->log("ServiceInstance::start new session %p", p);
 
-        p->sessionTypeDefined.connect_extended([this](const boost::signals2::connection &c,
+        p->sessionTypeDefined.connect_extended([this](const connection &c,
                                                std::shared_ptr<ServerSession> s) {
             c.disconnect();
             post([s, this]() {
@@ -55,12 +57,12 @@ void ServerInstance::onNewServiceControl(TSession s) {
         m_control.erase(s->serverId());
     }
 
-    s->onData.connect_extended([](const boost::signals2::connection &c, const uint8_t*, std::size_t) {
+    s->onData.connect_extended([](const connection &c, const uint8_t*, std::size_t) {
         c.disconnect();
         AAP->log("ServerInstance::onServiceDataSession onData SHOULD NEVER HAPPEN. FIX IT!!!!!");
     });
 
-    s->onClose.connect_extended([this, s](const boost::signals2::connection &c) {
+    s->onClose.connect_extended([this, s](const connection &c) {
         c.disconnect();
         m_control.erase(s->serverId());
         AAP->log("ServerInstance::onNewServiceControl onClose %p %i", s.get(), s->serverId());
@@ -109,7 +111,7 @@ void ServerInstance::onServiceDataSession(TSession s) {
 
     AAP->log("ServerInstance::onServiceDataSession %p %i", s.get(), s->serverId());
 
-    s->onWriteDone.connect_extended([this, requester, s](const boost::signals2::connection &c) {
+    s->onWriteDone.connect_extended([this, requester, s](const connection &c) {
         c.disconnect();
         sendRequesterResponse(requester, s);
     });
@@ -118,7 +120,7 @@ void ServerInstance::onServiceDataSession(TSession s) {
 }
 
 void ServerInstance::sendRequesterResponse(TSession r, TSession s) {
-    r->onWriteDone.connect_extended([r, s](const boost::signals2::connection &c) {
+    r->onWriteDone.connect_extended([r, s](const connection &c) {
         c.disconnect();
         r->setDataSession(s);
     });

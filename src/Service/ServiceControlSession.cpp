@@ -2,6 +2,8 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
+using boost::signals2::connection;
+
 void ServiceControlSession::startImpl() {
     auto self = Session::shared_from_this<ServiceControlSession>();
     startSSL(true, "server1", [self]() {
@@ -21,7 +23,7 @@ void ServiceControlSession::onHandshakeDone(TSession) {
 void ServiceControlSession::readRequest() {
     auto self = Session::shared_from_this<ServiceControlSession>();
 
-    self->onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
+    self->onData.connect_extended([self](const connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
 
         if ((static_cast<ConnectionType>(ptr[0]) != ConnectionType::SERVICE_CLIENT_DATA) || (ptr[1] != APP->serverId())) {

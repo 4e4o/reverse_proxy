@@ -1,6 +1,8 @@
 #include "ProxySession.hpp"
 #include "Base/Network/Client.hpp"
 
+using boost::signals2::connection;
+
 ProxySession::~ProxySession() {
 }
 
@@ -19,7 +21,7 @@ void ProxySession::startImpl() {
     std::shared_ptr<ProxyDataSession> clientSession(createClientSession());
     auto self = shared_from_this<ProxySession>();
 
-    m_outgoing->onConnect.connect_extended([self, clientSession](const boost::signals2::connection &c, bool connected) {
+    m_outgoing->onConnect.connect_extended([self, clientSession](const connection &c, bool connected) {
         if (connected) {
             self->startProxying(clientSession);
         }

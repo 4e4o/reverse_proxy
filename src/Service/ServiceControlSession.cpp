@@ -3,15 +3,15 @@
 #include "Application.hpp"
 
 void ServiceControlSession::startImpl() {
-    auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
+    auto self = std::dynamic_pointer_cast<ServiceControlSession>(Session::shared_from_this());
     startSSL(true, "server1", [self]() {
         self->onSSLInitDone();
     });
 }
 
 void ServiceControlSession::onSSLInitDone() {
-    auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
-    startHandshake(self, self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId());
+    auto self = std::dynamic_pointer_cast<ServiceControlSession>(Session::shared_from_this());
+    startHandshake(self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId());
 }
 
 void ServiceControlSession::onHandshakeDone(TSession) {
@@ -19,7 +19,7 @@ void ServiceControlSession::onHandshakeDone(TSession) {
 }
 
 void ServiceControlSession::readRequest() {
-    auto self = std::dynamic_pointer_cast<ServiceControlSession>(shared_from_this());
+    auto self = std::dynamic_pointer_cast<ServiceControlSession>(Session::shared_from_this());
 
     self->onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();

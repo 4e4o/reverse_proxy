@@ -3,10 +3,11 @@
 
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/placeholders.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/signals2.hpp>
 #include <boost/asio/strand.hpp>
+
+#include <memory>
 
 class Session;
 

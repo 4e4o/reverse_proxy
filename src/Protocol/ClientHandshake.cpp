@@ -2,23 +2,25 @@
 #include "Base/Network/Session.hpp"
 #include "Base/AApplication.h"
 
-void ClientHandshake::startHandshake(TClientHandshake self, TSession s, uint8_t type, uint8_t serverId) {
+void ClientHandshake::startHandshake(TSession s, uint8_t type, uint8_t serverId) {
     m_serverId = serverId;
     m_sessionType = type;
-    sendSessionType(self, s);
+    sendSessionType(s);
 }
 
-void ClientHandshake::sendSessionType(TClientHandshake self, TSession s) {
+void ClientHandshake::sendSessionType(TSession s) {
+    auto self = shared_from_this();
     s->onWriteDone.connect_extended([self, s](const boost::signals2::connection &c) {
         c.disconnect();
-        self->onSessionTypeSended(self, s);
+        self->onSessionTypeSended(s);
     });
 
     m_sendBuf = {m_sessionType, m_serverId};
     s->writeAll(m_sendBuf.data(), m_sendBuf.size());
 }
 
-void ClientHandshake::onSessionTypeSended(TClientHandshake self, TSession s) {
+void ClientHandshake::onSessionTypeSended(TSession s) {
+    auto self = shared_from_this();
     s->onData.connect_extended([self, s](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
         const uint8_t success = ptr[0];

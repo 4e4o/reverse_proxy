@@ -5,14 +5,14 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/signals2.hpp>
 #include <boost/array.hpp>
 
+#include "Base/EnableSharedFromThisVirtual.hpp"
 #include "Base/Network/TCPSocket.hpp"
 #include "Base/Span.hpp"
 
-class Session : public std::enable_shared_from_this<Session> {
+class Session : public enable_shared_from_this_virtual<Session> {
 public:
     typedef std::function<void()> TEvent;
 

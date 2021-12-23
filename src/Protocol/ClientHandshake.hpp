@@ -1,23 +1,23 @@
 #ifndef CLIENT_HANDSHAKE_HPP
 #define CLIENT_HANDSHAKE_HPP
 
-#include <memory>
+#include "Base/EnableSharedFromThisVirtual.hpp"
 
 class Session;
 
-class ClientHandshake {
+class ClientHandshake : public enable_shared_from_this_virtual<ClientHandshake> {
 public:
     typedef std::shared_ptr<Session> TSession;
     typedef std::shared_ptr<ClientHandshake> TClientHandshake;
 
-    void startHandshake(TClientHandshake, TSession, uint8_t, uint8_t);
+    void startHandshake(TSession, uint8_t, uint8_t);
 
 protected:
     virtual void onHandshakeDone(TSession) = 0;
 
 private:
-    void sendSessionType(TClientHandshake, TSession s);
-    void onSessionTypeSended(TClientHandshake, TSession s);
+    void sendSessionType(TSession s);
+    void onSessionTypeSended(TSession s);
 
     uint8_t m_sessionType;
     uint8_t m_serverId;

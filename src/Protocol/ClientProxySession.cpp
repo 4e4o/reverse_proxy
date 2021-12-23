@@ -10,7 +10,7 @@ void ClientProxySession::setSessionType(const uint8_t &sessionType) {
 }
 
 void ClientProxySession::startProxying(std::shared_ptr<ProxyDataSession> clientSession, bool) {
-    auto self = std::dynamic_pointer_cast<ClientProxySession>(Session::shared_from_this());
+    auto self = Session::shared_from_this<ClientProxySession>();
     clientSession->startSSL(true, "server1", [self, clientSession]() {
         self->startHandshake(clientSession, self->m_sessionType, APP->serverId());
     });

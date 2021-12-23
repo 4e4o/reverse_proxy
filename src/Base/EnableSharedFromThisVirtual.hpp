@@ -26,14 +26,14 @@ struct enable_shared_from_this_virtual: virtual enable_shared_from_this_virtual_
     typedef enable_shared_from_this_virtual_base base_type;
 
 public:
-    std::shared_ptr<T> shared_from_this() {
-        std::shared_ptr<T> result(base_type::shared_from_this(), static_cast<T*>(this));
-        return result;
+    template<typename TCasted = T>
+    std::shared_ptr<TCasted> shared_from_this() {
+        return std::dynamic_pointer_cast<TCasted>(std::shared_ptr<T>(base_type::shared_from_this(), static_cast<T*>(this)));
     }
 
-    std::shared_ptr<T const> shared_from_this() const {
-        std::shared_ptr<T const> result(base_type::shared_from_this(), static_cast<T const*>(this));
-        return result;
+    template<typename TCasted = T>
+    std::shared_ptr<TCasted const> shared_from_this() const {
+        return std::dynamic_pointer_cast<TCasted const>(std::shared_ptr<T const>(base_type::shared_from_this(), static_cast<T const*>(this)));
     }
 };
 

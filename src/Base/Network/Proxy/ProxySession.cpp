@@ -17,7 +17,7 @@ void ProxySession::startImpl() {
     m_outgoing.reset(new Client(io()));
 
     std::shared_ptr<ProxyDataSession> clientSession(createClientSession());
-    auto self = std::dynamic_pointer_cast<ProxySession>(shared_from_this());
+    auto self = shared_from_this<ProxySession>();
 
     m_outgoing->onConnect.connect_extended([self, clientSession](const boost::signals2::connection &c, bool connected) {
         if (connected) {

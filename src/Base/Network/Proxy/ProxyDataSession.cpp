@@ -21,7 +21,7 @@ void ProxyDataSession::setOther(std::shared_ptr<ProxyDataSession> ps) {
         return;
 
     m_other = ps;
-    m_other->setOther(std::dynamic_pointer_cast<ProxyDataSession>(shared_from_this()));
+    m_other->setOther(shared_from_this<ProxyDataSession>());
 }
 
 void ProxyDataSession::startImpl() {

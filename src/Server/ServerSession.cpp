@@ -13,14 +13,14 @@ uint8_t ServerSession::serverId() const {
 }
 
 void ServerSession::startImpl() {
-    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    auto self = shared_from_this<ServerSession>();
     startSSL(false, "client1", [self]() {
         self->readClientType();
     });
 }
 
 void ServerSession::readClientType() {
-    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    auto self = shared_from_this<ServerSession>();
 
     onData.connect_extended([self](const boost::signals2::connection &c, const uint8_t *ptr, std::size_t) {
         c.disconnect();
@@ -49,7 +49,7 @@ void ServerSession::readClientType() {
 // -------------- client
 
 void ServerSession::setDataSession(TSession s) {
-    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    auto self = shared_from_this<ServerSession>();
     auto other = std::dynamic_pointer_cast<ServerSession>(s);
 
     post([self, other]() {
@@ -68,7 +68,7 @@ void ServerSession::setDataSession(TSession s) {
 // -------------- service control
 
 void ServerSession::requestDataSession() {
-    auto self = std::dynamic_pointer_cast<ServerSession>(shared_from_this());
+    auto self = shared_from_this<ServerSession>();
 
     post([self]() {
         self->onWriteDone.connect_extended([self](const boost::signals2::connection &c) {

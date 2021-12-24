@@ -15,10 +15,13 @@ private:
     void setControlSession(std::shared_ptr<ServiceControlSession>);
     void startDataChannels();
     void startDataClient(std::shared_ptr<Session>);
+    void startReconnectTimer();
 
     void start() override final;
     void stop() override final;
 
+    bool m_stopped;
+    boost::asio::steady_timer m_reconnectTimer;
     std::shared_ptr<ServiceControlSession> m_controlSession;
 };
 

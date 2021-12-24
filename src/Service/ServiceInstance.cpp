@@ -6,36 +6,75 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
+#define RECONNECT_TIMEOUT_SEC 5
+
 using boost::signals2::connection;
 
 ServiceInstance::ServiceInstance(boost::asio::io_service &io)
-    : Instance(io) {
+    : Instance(io),
+      m_stopped(false),
+      m_reconnectTimer(io) {
 }
 
 ServiceInstance::~ServiceInstance() {
 }
 
-void ServiceInstance::start() {
-    std::shared_ptr<ServiceControlSession> session(new ServiceControlSession(io()));
-    std::shared_ptr<Client> client(new Client(io()));
-    client->setSession(session);
+void ServiceInstance::startReconnectTimer() {
+    if (m_stopped)
+        return;
 
-    client->onConnect.connect_extended([this, session](const connection &c, bool connected) {
-        c.disconnect();
+    m_reconnectTimer.expires_after(boost::asio::chrono::seconds(RECONNECT_TIMEOUT_SEC));
+    m_reconnectTimer.async_wait([this](const boost::system::error_code& ec) {
+        AAP->log("startReconnectTimer tick %i", ec);
+        if (ec == boost::asio::error::operation_aborted)
+            return;
 
-        if (connected) {
-            setControlSession(session);
-        }
+        start();
     });
+}
 
-    client->connect(APP->epIp(), APP->epPort());
+void ServiceInstance::start() {
+    post([this] () {
+        AAP->log("ServiceInstance::start %p", this);
+
+        std::shared_ptr<ServiceControlSession> session(new ServiceControlSession(io()));
+        std::shared_ptr<Client> client(new Client(io()));
+        client->setSession(session);
+
+        session->onDestroy.connect_extended([this](const connection &c) {
+            c.disconnect();
+
+            post([this]() {
+                startReconnectTimer();
+            });
+        });
+
+        client->onConnect.connect_extended([this, session](const connection &c, bool connected) {
+            c.disconnect();
+
+            if (connected) {
+                post([this, session]() {
+                    setControlSession(session);
+                });
+            }
+        });
+
+        client->connect(APP->epIp(), APP->epPort());
+    });
 }
 
 void ServiceInstance::stop() {
-    if (m_controlSession.get() != nullptr) {
-        m_controlSession->close();
-        m_controlSession.reset();
-    }
+    post([this]() {
+        if (m_stopped)
+            return;
+
+        m_stopped = true;
+
+        if (m_controlSession.get() != nullptr)
+            m_controlSession->close();
+
+        m_reconnectTimer.cancel();
+    });
 }
 
 void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s) {
@@ -44,7 +83,16 @@ void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s
     m_controlSession = s;
 
     s->dataSessionRequest.connect([this]() {
-        this->startDataChannels();
+        post([this] {
+            startDataChannels();
+        });
+    });
+
+    s->onClose.connect_extended([this](const connection &c) {
+        c.disconnect();
+        post([this] {
+            m_controlSession.reset();
+        });
     });
 
     s->start();
@@ -61,7 +109,9 @@ void ServiceInstance::startDataChannels() {
         c.disconnect();
 
         if (connected) {
-            startDataClient(session);
+            post([this, session]{
+                startDataClient(session);
+            });
         }
     });
 

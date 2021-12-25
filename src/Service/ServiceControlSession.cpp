@@ -13,7 +13,7 @@ void ServiceControlSession::startImpl() {
 
 void ServiceControlSession::onSSLInitDone() {
     auto self = Session::shared_from_this<ServiceControlSession>();
-    startHandshake(self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId());
+    startHandshake(self, static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_CONTROL), APP->serverId(), false);
 }
 
 void ServiceControlSession::onHandshakeDone(TSession) {

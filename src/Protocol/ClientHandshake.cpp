@@ -4,7 +4,8 @@
 
 using boost::signals2::connection;
 
-void ClientHandshake::startHandshake(TSession s, uint8_t type, uint8_t serverId) {
+void ClientHandshake::startHandshake(TSession s, uint8_t type, uint8_t serverId, bool stripSSL) {
+    m_stripSSL = stripSSL;
     m_serverId = serverId;
     m_sessionType = type;
     sendSessionType(s);
@@ -29,11 +30,31 @@ void ClientHandshake::onSessionTypeSended(TSession s) {
         AAP->log("ClientHandshake success = %i", success);
 
         if (success) {
-            self->onHandshakeDone(s);
+            self->finalStep(s);
         } else {
             s->close();
         }
     });
 
     s->readAll(1);
+}
+
+void ClientHandshake::finalStep(TSession s) {
+    if (!m_stripSSL) {
+        onHandshakeDone(s);
+        return;
+    }
+
+    // strip ssl layer
+    s->socket().setSSL(false);
+
+    auto self = shared_from_this();
+
+    s->onWriteDone.connect_extended([self, s](const connection &c) {
+        c.disconnect();
+        self->onHandshakeDone(s);
+    });
+
+    m_success = 1;
+    s->writeAll(&m_success, 1);
 }

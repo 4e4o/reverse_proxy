@@ -4,14 +4,11 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
-#include <boost/asio/post.hpp>
-
 using boost::signals2::connection;
 
 ServerInstance::ServerInstance(boost::asio::io_service &io)
     : Instance(io),
-      m_server(new Server<ServerSession>(io)),
-      m_success(1) {
+      m_server(new Server<ServerSession>(io)) {
 }
 
 ServerInstance::~ServerInstance() {
@@ -21,21 +18,27 @@ void ServerInstance::start() {
     m_server->setSessionInit([this](ServerSession* session) {
         AAP->log("ServiceInstance::start new session %p", session);
 
-        session->sessionTypeDefined.connect_extended([this](const connection &c,
-                                                     std::shared_ptr<ServerSession> s) {
+        session->onControlSession.connect_extended([this](const connection &c,
+                                                   std::shared_ptr<ServerSession> s) {
             c.disconnect();
             post([s, this]() {
-                switch(s->type()) {
-                case ConnectionType::CLIENT:
-                    onServiceRequest(s);
-                    break;
-                case ConnectionType::SERVICE_CLIENT_CONTROL:
-                    onNewServiceControl(s);
-                    break;
-                case ConnectionType::SERVICE_CLIENT_DATA:
-                    onServiceDataSession(s);
-                    break;
-                }
+                onNewServiceControl(s);
+            });
+        });
+
+        session->onClientSession.connect_extended([this](const connection &c,
+                                                  std::shared_ptr<ServerSession> s) {
+            c.disconnect();
+            post([s, this]() {
+                onServiceRequest(s);
+            });
+        });
+
+        session->onClientDataSession.connect_extended([this](const connection &c,
+                                                      std::shared_ptr<ServerSession> s) {
+            c.disconnect();
+            post([s, this]() {
+                onServiceDataSession(s);
             });
         });
     });
@@ -55,11 +58,6 @@ void ServerInstance::onNewServiceControl(TSession s) {
         m_control.erase(s->serverId());
     }
 
-    s->onData.connect_extended([](const connection &c, const uint8_t*, std::size_t) {
-        c.disconnect();
-        AAP->log("ServerInstance::onServiceDataSession onData SHOULD NEVER HAPPEN. FIX IT!!!!!");
-    });
-
     s->onClose.connect_extended([this, s](const connection &c) {
         c.disconnect();
         m_control.erase(s->serverId());
@@ -67,12 +65,8 @@ void ServerInstance::onNewServiceControl(TSession s) {
     });
 
     m_control[s->serverId()] = s;
-    sendSuccess(s);
-    AAP->log("ServerInstance::onNewServiceControl %p %i", s.get(), s->serverId());
 
-    // читаем что-нибудь чтоб определить дохлое соединение
-    // никаких данных мы тут не получаем
-    s->readSome();
+    AAP->log("ServerInstance::onNewServiceControl %p %i", s.get(), s->serverId());
 }
 
 void ServerInstance::onServiceRequest(TSession s) {
@@ -101,7 +95,7 @@ void ServerInstance::onServiceDataSession(TSession s) {
     }
 
     TSessionQueue& sq = r->second;
-    TSession requester = sq.front();
+    ServerSession::TSession requester = std::dynamic_pointer_cast<ServerSession>(sq.front());
     sq.pop();
 
     if (sq.empty())
@@ -109,23 +103,5 @@ void ServerInstance::onServiceDataSession(TSession s) {
 
     AAP->log("ServerInstance::onServiceDataSession %p %i", s.get(), s->serverId());
 
-    s->onWriteDone.connect_extended([this, requester, s](const connection &c) {
-        c.disconnect();
-        sendRequesterResponse(requester, s);
-    });
-
-    sendSuccess(s);
-}
-
-void ServerInstance::sendRequesterResponse(TSession r, TSession s) {
-    r->onWriteDone.connect_extended([r, s](const connection &c) {
-        c.disconnect();
-        r->setDataSession(s);
-    });
-
-    sendSuccess(r);
-}
-
-void ServerInstance::sendSuccess(TSession s) {
-    s->writeAll(&m_success, 1);
+    requester->setDataSession(s);
 }

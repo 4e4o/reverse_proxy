@@ -1,10 +1,7 @@
 #ifndef PROXY_SESSION_H
 #define PROXY_SESSION_H
 
-#include "Base/Network/Client.hpp"
 #include "ProxyDataSession.hpp"
-
-class Client;
 
 // ProxyDataSession сессия с клиентом
 
@@ -20,7 +17,6 @@ protected:
     virtual ProxyDataSession* createClientSession();
 
 private:
-    std::shared_ptr<Client> m_outgoing;
     std::string m_ip;
     int m_port;
 };

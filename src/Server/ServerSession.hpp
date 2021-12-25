@@ -11,7 +11,9 @@ public:
     using ProxyDataSession::ProxyDataSession;
     ~ServerSession();
 
-    boost::signals2::signal<void(TSession)> sessionTypeDefined;
+    boost::signals2::signal<void(TSession)> onControlSession;
+    boost::signals2::signal<void(TSession)> onClientSession;
+    boost::signals2::signal<void(TSession)> onClientDataSession;
 
     ConnectionType type() const;
     uint8_t serverId() const;
@@ -20,12 +22,22 @@ public:
     void setDataSession(TSession);
 
 private:
+    typedef std::function<void()> TEvent;
+
     void readClientType();
     void startImpl() override final;
+    void sendSuccess();
+    void onControl();
+    void onClient();
+    void onClientData();
+    void processDataSessionRequest();
+    void finishClientHandshake(TEvent);
 
+    uint8_t m_success;
     ConnectionType m_type;
     uint8_t m_serverId;
     int m_dataRequestsCount;
+    bool m_requestWriting;
     std::array<uint8_t, 2> m_requestBuffer;
 };
 

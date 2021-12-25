@@ -6,10 +6,10 @@ static boost::asio::ssl::context initContext() {
 
     context ctx(boost::asio::ssl::context::tls);
     ctx.set_options(context::default_workarounds
-                             | context::no_sslv2
-                             | context::no_sslv3
-                             | context::no_tlsv1
-                             | context::no_tlsv1_1);
+                    | context::no_sslv2
+                    | context::no_sslv3
+                    | context::no_tlsv1
+                    | context::no_tlsv1_1);
 
     ctx.load_verify_file("ca.crt");
     ctx.use_certificate_file("entity.crt", context::pem);
@@ -51,10 +51,15 @@ void TCPSocket::init() {
 }
 
 void TCPSocket::close() {
-    if (m_ssl)
-        m_socket.shutdown();
+    if (m_ssl) {
+        try {
+            m_socket.shutdown();
+        } catch(...) { }
+    }
 
-    m_socket.next_layer().close();
+    try {
+        m_socket.next_layer().close();
+    } catch(...) { }
 }
 
 void TCPSocket::initSSL(boost::asio::ssl::stream_base::handshake_type type,

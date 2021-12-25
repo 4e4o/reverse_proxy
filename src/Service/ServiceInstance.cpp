@@ -70,17 +70,16 @@ void ServiceInstance::stop() {
 
         m_stopped = true;
 
-        if (m_controlSession.get() != nullptr)
-            m_controlSession->close();
+        try {
+            m_reconnectTimer.cancel();
+        } catch(...) { }
 
-        m_reconnectTimer.cancel();
+        closeClients();
     });
 }
 
 void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s) {
     AAP->log("ServiceInstance::setControlSession connected to remote server %p", this);
-
-    m_controlSession = s;
 
     s->dataSessionRequest.connect([this]() {
         post([this] {
@@ -88,12 +87,8 @@ void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s
         });
     });
 
-    s->onClose.connect_extended([this](const connection &c) {
-        c.disconnect();
-        post([this] {
-            m_controlSession.reset();
-        });
-    });
+    closeClients.connect(decltype(closeClients)::slot_type(
+                             &ServiceControlSession::close, s.get()).track_foreign(s));
 
     s->start();
 }
@@ -125,4 +120,7 @@ void ServiceInstance::startDataClient(std::shared_ptr<Session> first) {
     second->setEndpoint(APP->epIp(), APP->epPort());
     second->setSessionType(static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA));
     second->start();
+
+    closeClients.connect(decltype(closeClients)::slot_type(
+                             &ClientProxySession::close, second.get()).track_foreign(second));
 }

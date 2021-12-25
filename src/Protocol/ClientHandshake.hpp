@@ -10,7 +10,7 @@ public:
     typedef std::shared_ptr<Session> TSession;
     typedef std::shared_ptr<ClientHandshake> TClientHandshake;
 
-    void startHandshake(TSession, uint8_t, uint8_t);
+    void startHandshake(TSession, uint8_t, uint8_t, bool stripSSL);
 
 protected:
     virtual void onHandshakeDone(TSession) = 0;
@@ -18,10 +18,13 @@ protected:
 private:
     void sendSessionType(TSession s);
     void onSessionTypeSended(TSession s);
+    void finalStep(TSession s);
 
+    bool m_stripSSL;
     uint8_t m_sessionType;
     uint8_t m_serverId;
     std::array<uint8_t, 2> m_sendBuf;
+    uint8_t m_success;
 };
 
 #endif // CLIENT_HANDSHAKE_HPP

@@ -24,8 +24,11 @@ Session::~Session() {
 }
 
 void Session::start() {
-    m_socket.init();
-    startImpl();
+    auto self = shared_from_this();
+    post([self]() {
+        self->m_socket.init();
+        self->startImpl();
+    });
 }
 
 void Session::startImpl() {
@@ -51,6 +54,7 @@ void Session::readAll(std::size_t size) {
 void Session::readSome(std::size_t maxSize) {
     const std::size_t size = std::min(maxSize, m_readBuffer.size());
     auto self = shared_from_this();
+
     m_socket.async_read_some(
                 boost::asio::buffer(m_readBuffer, size),
                 m_strand.wrap([self](const boost::system::error_code &ec,
@@ -63,7 +67,7 @@ void Session::readSome(std::size_t maxSize) {
             return;
         }
 
-        // AAP->log("REEEEEAD %i %x %p", bytes_transferred, self->m_readBuffer.data()[0] & 0xFF, self.get());
+        //AAP->log("REEEEEAD %i %x %p", bytes_transferred, self->m_readBuffer.data()[0] & 0xFF, self.get());
         self->onData(self->m_readBuffer.data(), bytes_transferred);
     }));
 }
@@ -159,6 +163,9 @@ void Session::close() {
 
         try {
             self->m_socket.close();
+        } catch(...) { }
+
+        try {
             self->m_closed = true;
             self->onClose();
             self->disconnectAllSlots();

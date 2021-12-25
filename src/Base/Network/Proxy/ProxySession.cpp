@@ -16,12 +16,12 @@ ProxyDataSession* ProxySession::createClientSession() {
 }
 
 void ProxySession::startImpl() {
-    m_outgoing.reset(new Client(io()));
+    std::shared_ptr<Client> outgoint(new Client(io()));
 
     std::shared_ptr<ProxyDataSession> clientSession(createClientSession());
     auto self = shared_from_this<ProxySession>();
 
-    m_outgoing->onConnect.connect_extended([self, clientSession](const connection &c, bool connected) {
+    outgoint->onConnect.connect_extended([self, clientSession](const connection &c, bool connected) {
         if (connected) {
             self->startProxying(clientSession);
         }
@@ -31,6 +31,6 @@ void ProxySession::startImpl() {
         c.disconnect();
     });
 
-    m_outgoing->setSession(clientSession);
-    m_outgoing->connect(m_ip, m_port);
+    outgoint->setSession(clientSession);
+    outgoint->connect(m_ip, m_port);
 }

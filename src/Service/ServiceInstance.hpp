@@ -1,6 +1,8 @@
 #ifndef SERVICE_INSTANCE_HPP
 #define SERVICE_INSTANCE_HPP
 
+#include <boost/signals2/signal.hpp>
+
 #include "Instance.hpp"
 
 class Session;
@@ -22,7 +24,7 @@ private:
 
     bool m_stopped;
     boost::asio::steady_timer m_reconnectTimer;
-    std::shared_ptr<ServiceControlSession> m_controlSession;
+    boost::signals2::signal<void ()> closeClients;
 };
 
 #endif // SERVICE_INSTANCE_HPP

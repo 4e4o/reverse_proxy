@@ -12,13 +12,11 @@ void ClientProxySession::setSessionType(const uint8_t &sessionType) {
 void ClientProxySession::startProxying(std::shared_ptr<ProxyDataSession> clientSession, bool) {
     auto self = Session::shared_from_this<ClientProxySession>();
     clientSession->startSSL(true, "server1", [self, clientSession]() {
-        self->startHandshake(clientSession, self->m_sessionType, APP->serverId());
+        self->startHandshake(clientSession, self->m_sessionType, APP->serverId(), true);
     });
 }
 
 void ClientProxySession::onHandshakeDone(TSession client) {
-    // strip ssl layer
-    client->socket().setSSL(false);
     auto clientSession = std::dynamic_pointer_cast<ProxyDataSession>(client);
     ProxyDataSession::startProxying(clientSession);
 }

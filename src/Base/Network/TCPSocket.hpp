@@ -15,8 +15,10 @@ public:
     TCPSocket(TCPSocket&& socket);
     virtual ~TCPSocket();
 
-    void initSSL(boost::asio::ssl::stream_base::handshake_type,
-                 const std::string& verifyHost, TInitResult);
+    void setSSLParameters(const std::string& verifyHost,
+                          const std::string& keysPath = "",
+                          const std::string& entityName = "entity");
+    void initSSL(boost::asio::ssl::stream_base::handshake_type, TInitResult);
     void setSSL(bool);
 
     template<typename... Args>

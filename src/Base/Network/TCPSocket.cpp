@@ -1,7 +1,8 @@
 #include "TCPSocket.hpp"
 #include "Base/AApplication.h"
 
-static boost::asio::ssl::context* createSSLContext() {
+static boost::asio::ssl::context* createSSLContext(const std::string& keysPath = "",
+                                                   const std::string& entityName = "entity") {
     using namespace boost::asio::ssl;
 
     context* ctx = new context(boost::asio::ssl::context::tls);
@@ -11,9 +12,9 @@ static boost::asio::ssl::context* createSSLContext() {
                      | context::no_tlsv1
                      | context::no_tlsv1_1);
 
-    ctx->load_verify_file("ca.crt");
-    ctx->use_certificate_file("entity.crt", context::pem);
-    ctx->use_private_key_file("entity.key", context::pem);
+    ctx->load_verify_file(keysPath + "ca.crt");
+    ctx->use_certificate_file(keysPath + entityName + ".crt", context::pem);
+    ctx->use_private_key_file(keysPath + entityName + ".key", context::pem);
     return ctx;
 }
 
@@ -60,21 +61,30 @@ void TCPSocket::close() {
     } catch(...) { }
 }
 
-void TCPSocket::initSSL(boost::asio::ssl::stream_base::handshake_type type,
-                        const std::string& verifyHost, TInitResult r) {
+void TCPSocket::setSSLParameters(const std::string& verifyHost,
+                                 const std::string& keysPath,
+                                 const std::string& entityName) {
     using namespace boost::asio::ssl;
 
-    m_ssl = true;
-    m_socket->set_verify_mode(verify_peer);
+    m_sslContext.reset(createSSLContext(keysPath, entityName));
+    m_socket.reset(new TSocket(std::move(m_socket->next_layer()), *m_sslContext));
 
 #if BOOST_VERSION < 107300
     m_socket->set_verify_callback(rfc2818_verification(verifyHost));
 #else
     m_socket->set_verify_callback(host_name_verification(verifyHost));
 #endif // BOOST_VERSION < 107300
+}
 
-    m_socket->async_handshake(type,
-                              [r] (boost::system::error_code error) {
+void TCPSocket::initSSL(boost::asio::ssl::stream_base::handshake_type type,
+                        TInitResult r) {
+    using namespace boost::asio::ssl;
+    using namespace boost::system;
+
+    m_ssl = true;
+    m_socket->set_verify_mode(verify_peer);
+
+    m_socket->async_handshake(type, [r] (const error_code& error) {
         AAP->log("initSSL async_handshake error = %s", error.message().c_str());
         r(!error);
     });

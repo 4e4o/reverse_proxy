@@ -16,7 +16,8 @@ uint8_t ServerSession::serverId() const {
 
 void ServerSession::startImpl() {
     auto self = shared_from_this<ServerSession>();
-    startSSL(false, "client1", [self]() {
+    socket().setSSLParameters("client1");
+    startSSL(false, [self]() {
         self->readClientType();
     });
 }

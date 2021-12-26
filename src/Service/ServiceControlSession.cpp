@@ -6,7 +6,8 @@ using boost::signals2::connection;
 
 void ServiceControlSession::startImpl() {
     auto self = Session::shared_from_this<ServiceControlSession>();
-    startSSL(true, "server1", [self]() {
+    socket().setSSLParameters("server1");
+    startSSL(true, [self]() {
         self->onSSLInitDone();
     });
 }

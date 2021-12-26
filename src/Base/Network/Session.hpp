@@ -23,7 +23,7 @@ public:
     void start();
     void close();
 
-    void startSSL(bool client, const std::string& verifyHost, TEvent);
+    void startSSL(bool client, TEvent);
 
     virtual void readSome(std::size_t maxSize = READ_BUFFER_SIZE);
     virtual void readAll(std::size_t size);

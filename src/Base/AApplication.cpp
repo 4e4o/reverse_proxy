@@ -11,7 +11,7 @@
 #include <atomic>
 
 //#define LOG_TO_SYSLOG   1
-#define LOG_TO_CONSOLE  1
+//#define LOG_TO_CONSOLE  1
 
 AApplication* AApplication::m_app = nullptr;
 

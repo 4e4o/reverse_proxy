@@ -28,7 +28,7 @@ TCPSocket::TCPSocket(TCPSocket&& socket)
 
 TCPSocket::TCPSocket(boost::asio::ip::tcp::socket&& socket)
     : m_ssl(false),
-      m_sslContext(createSSLContext()),
+      m_sslContext(new boost::asio::ssl::context(boost::asio::ssl::context::tls)),
       m_socket(new TSocket(std::move(socket), *m_sslContext)) {
 }
 

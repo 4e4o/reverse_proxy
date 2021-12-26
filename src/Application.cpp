@@ -6,7 +6,7 @@
 #include "Config.hpp"
 
 #define PROG_NAME   "reverse proxy"
-#define DAEMON      false
+#define DAEMON      true
 
 Application::Application(int argc, char** argv)
     : AApplication(PROG_NAME, argc, argv, DAEMON),

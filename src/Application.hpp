@@ -41,7 +41,6 @@ private:
     int m_epPort;
     uint8_t m_serverId;
 
-    bool m_stopped;
     std::shared_ptr<ThreadPool> m_threadPool;
     std::shared_ptr<IRunnable> m_instance;
     Mode m_mode;

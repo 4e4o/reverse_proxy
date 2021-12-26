@@ -9,7 +9,6 @@
 
 Application::Application(int argc, char** argv)
     : AApplication(PROG_NAME, argc, argv, DAEMON),
-      m_stopped(false),
       m_threadPool(new ThreadPool()) {
 }
 
@@ -87,11 +86,7 @@ int Application::exec() {
 
 void Application::onExitRequest() {
     boost::asio::post(m_threadPool->getIOService(), [this]() {
-        if (m_stopped)
-            return;
-
         log("onExitRequest start");
-        m_stopped = true;
         m_instance->stop();
         m_threadPool->stop(false);
         log("onExitRequest end");

@@ -64,22 +64,8 @@ private:
                 if (m_sessionInit)
                     m_sessionInit(session.get());
 
-                std::weak_ptr<Session> weak_session = session;
-
-                auto close_connection = closeAllSessions.connect_extended([weak_session](const boost::signals2::connection &c) {
-                    c.disconnect();
-                    auto ptr = weak_session.lock();
-
-                    if (!ptr)
-                        return;
-
-                    ptr->close();
-                });
-
-                session->onDestroy.connect_extended([close_connection](const boost::signals2::connection &c) {
-                    c.disconnect();
-                    close_connection.disconnect();
-                });
+                closeAllSessions.connect(typename decltype(closeAllSessions)::slot_type(
+                                             &Session::close, session.get()).track_foreign(session));
 
                 session->start();
             }
@@ -88,8 +74,7 @@ private:
         }));
     }
 
-    boost::signals2::signal<void ()> closeAllSessions;
-
+    boost::signals2::signal<void()> closeAllSessions;
     boost::asio::io_service &m_io;
     Acceptor m_acceptor;
     boost::asio::ip::tcp::socket m_socket;

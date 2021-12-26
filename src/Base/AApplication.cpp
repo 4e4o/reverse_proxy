@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <atomic>
 
 //#define LOG_TO_SYSLOG   1
 #define LOG_TO_CONSOLE  1
@@ -21,8 +22,13 @@ public:
     }
 };
 
+static std::atomic_flag g_ctrlLock = ATOMIC_FLAG_INIT;
+
 static void ctrCHandler(int) {
-    AApPrivateAccessor::callOnExit();
+    if (g_ctrlLock.test_and_set())
+        return;
+
+    AAP->quit();
 }
 
 AApplication::AApplication(const std::string& name, int argc, char** argv, bool daemon)

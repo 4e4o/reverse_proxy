@@ -22,6 +22,8 @@ private:
     void start() override final;
     void stop() override final;
 
+    static constexpr int RECONNECT_TIMEOUT_SEC = 10;
+
     bool m_stopped;
     boost::asio::steady_timer m_reconnectTimer;
     boost::signals2::signal<void ()> closeClients;

@@ -24,7 +24,7 @@ public:
     boost::signals2::signal<void (bool)> onConnect;
 
 private:
-    static constexpr int CONNECT_TIMEOUT_SEC = 30;
+    static constexpr int CONNECT_TIMEOUT_SEC = 10;
 
     boost::asio::io_service::strand m_strand;
     boost::asio::steady_timer m_connectTimer;

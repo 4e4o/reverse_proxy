@@ -3,11 +3,7 @@
 
 #include "Base/AApplication.h"
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/strand.hpp>
-
-#include <optional>
-#include <list>
+#include <memory>
 
 #define APP         static_cast<Application*>(AAP)
 
@@ -48,7 +44,6 @@ private:
     bool m_stopped;
     std::shared_ptr<ThreadPool> m_threadPool;
     std::shared_ptr<IRunnable> m_instance;
-    boost::asio::io_service::strand m_exitStrand;
     Mode m_mode;
 };
 

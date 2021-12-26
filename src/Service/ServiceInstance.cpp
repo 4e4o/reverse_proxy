@@ -6,8 +6,6 @@
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
 
-#define RECONNECT_TIMEOUT_SEC 5
-
 using boost::signals2::connection;
 
 ServiceInstance::ServiceInstance(boost::asio::io_service &io)

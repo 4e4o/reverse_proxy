@@ -10,8 +10,7 @@
 Application::Application(int argc, char** argv)
     : AApplication(PROG_NAME, argc, argv, DAEMON),
       m_stopped(false),
-      m_threadPool(new ThreadPool()),
-      m_exitStrand(m_threadPool->getIOService()) {
+      m_threadPool(new ThreadPool()) {
 }
 
 Application::~Application() {
@@ -87,7 +86,7 @@ int Application::exec() {
 }
 
 void Application::onExitRequest() {
-    boost::asio::post(m_threadPool->getIOService(), m_exitStrand.wrap([this]() {
+    boost::asio::post(m_threadPool->getIOService(), [this]() {
         if (m_stopped)
             return;
 
@@ -96,7 +95,7 @@ void Application::onExitRequest() {
         m_instance->stop();
         m_threadPool->stop(false);
         log("onExitRequest end");
-    }));
+    });
 }
 
 uint8_t Application::serverId() const {

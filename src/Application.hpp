@@ -6,9 +6,11 @@
 #include <memory>
 
 #define APP         static_cast<Application*>(AAP)
+#define CONFIG      APP->config()
 
 class IRunnable;
 class ThreadPool;
+struct Config;
 
 class Application : public AApplication {
 public:
@@ -17,33 +19,15 @@ public:
 
     int exec() override final;
 
-    enum class Mode {
-        SERVICE,
-        CLIENT,
-        PROXY_SERVER
-    };
-
-    std::string ip() const;
-    int port() const;
-
-    std::string epIp() const;
-    int epPort() const;
-
-    uint8_t serverId() const;
+    const Config& config() const;
 
 private:
     void onExitRequest() override;
     bool processArgs();
 
-    std::string m_ip;
-    int m_port;
-    std::string m_epIp;
-    int m_epPort;
-    uint8_t m_serverId;
-
+    std::unique_ptr<Config> m_config;
     std::shared_ptr<ThreadPool> m_threadPool;
     std::shared_ptr<IRunnable> m_instance;
-    Mode m_mode;
 };
 
 #endif // HEADER_APPLICATION_HPP

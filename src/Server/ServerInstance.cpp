@@ -3,6 +3,7 @@
 #include "ServerSession.hpp"
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
+#include "Config.hpp"
 
 using boost::signals2::connection;
 
@@ -43,7 +44,7 @@ void ServerInstance::start() {
         });
     });
 
-    m_server->start(APP->ip(), APP->port());
+    m_server->start(CONFIG.listenIP, CONFIG.listenPort);
 }
 
 void ServerInstance::stop() {

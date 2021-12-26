@@ -3,6 +3,7 @@
 #include "Server/ServerInstance.hpp"
 #include "Client/ClientInstance.hpp"
 #include "Service/ServiceInstance.hpp"
+#include "Config.hpp"
 
 #define PROG_NAME   "reverse proxy"
 #define DAEMON      false
@@ -16,47 +17,26 @@ Application::~Application() {
     m_instance.reset();
 }
 
+const Config& Application::config() const {
+    return *m_config;
+}
+
 bool Application::processArgs() {
     po::options_description desc("Options");
-
-    {
-        desc.add_options()("c", "Client mode");
-        desc.add_options()("p", "Proxy server mode");
-        desc.add_options()("s", "Service mode");
-
-        desc.add_options()("ip", po::value<std::string>(), "Listen ip");
-        desc.add_options()("port", po::value<int>(), "Listen port");
-
-        desc.add_options()("ep_ip", po::value<std::string>(), "Endpoint listen ip");
-        desc.add_options()("ep_port", po::value<int>(), "Endpoint listen port");
-
-        desc.add_options()("server_id", po::value<int>(), "Server id");
-    }
-
+    desc.add_options()("c", po::value<std::string>(), "Config file");
     po::variables_map vm = parseCmdLine(desc);
 
     if (vm.count("c")) {
-        m_mode = Mode::CLIENT;
-    } else if (vm.count("p")) {
-        m_mode = Mode::PROXY_SERVER;
-    } else if (vm.count("s")) {
-        m_mode = Mode::SERVICE;
+        m_config.reset(Config::load(vm["c"].as<std::string>()));
     } else {
-        log("Unknown mode");
+        log("No config file");
         return false;
     }
 
-    m_ip = vm["ip"].as<std::string>();
-    m_port = vm["port"].as<int>();
-
-    if (vm.count("ep_ip"))
-        m_epIp = vm["ep_ip"].as<std::string>();
-
-    if (vm.count("ep_port"))
-        m_epPort = vm["ep_port"].as<int>();
-
-    if (vm.count("server_id"))
-        m_serverId = vm["server_id"].as<int>();
+    if (m_config.get() == nullptr) {
+        log("Config load error");
+        return false;
+    }
 
     return true;
 }
@@ -67,11 +47,11 @@ int Application::exec() {
 
     AApplication::exec();
 
-    if (m_mode == Mode::CLIENT) {
+    if (m_config->mode == Mode::CLIENT) {
         m_instance.reset(new ClientInstance(m_threadPool->getIOService()));
-    } else if (m_mode == Mode::PROXY_SERVER) {
+    } else if (m_config->mode == Mode::PROXY_SERVER) {
         m_instance.reset(new ServerInstance(m_threadPool->getIOService()));
-    } else if (m_mode == Mode::SERVICE) {
+    } else if (m_config->mode == Mode::SERVICE) {
         m_instance.reset(new ServiceInstance(m_threadPool->getIOService()));
     }
 
@@ -91,24 +71,4 @@ void Application::onExitRequest() {
         m_threadPool->stop(false);
         log("onExitRequest end");
     });
-}
-
-uint8_t Application::serverId() const {
-    return m_serverId;
-}
-
-int Application::epPort() const {
-    return m_epPort;
-}
-
-std::string Application::epIp() const {
-    return m_epIp;
-}
-
-int Application::port() const {
-    return m_port;
-}
-
-std::string Application::ip() const {
-    return m_ip;
 }

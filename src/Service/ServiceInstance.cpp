@@ -1,10 +1,11 @@
 #include "ServiceInstance.hpp"
-#include "Base/Network/Client.hpp"
 #include "ServiceControlSession.hpp"
+#include "Base/Network/Client.hpp"
 #include "Base/Network/Proxy/ProxyDataSession.hpp"
 #include "Protocol/ClientProxySession.hpp"
 #include "Protocol/ConnectionType.hpp"
 #include "Application.hpp"
+#include "Config.hpp"
 
 using boost::signals2::connection;
 
@@ -57,7 +58,7 @@ void ServiceInstance::start() {
             }
         });
 
-        client->connect(APP->epIp(), APP->epPort());
+        client->connect(CONFIG.remoteIP, CONFIG.remotePort);
     });
 }
 
@@ -108,14 +109,14 @@ void ServiceInstance::startDataChannels() {
         }
     });
 
-    client->connect(APP->ip(), APP->port());
+    client->connect(CONFIG.listenIP, CONFIG.listenPort);
 }
 
 void ServiceInstance::startDataClient(std::shared_ptr<Session> first) {
     AAP->log("ServiceInstance::startDataClient %p", this);
 
     std::shared_ptr<ClientProxySession> second(new ClientProxySession(io(), std::move(first->socket())));
-    second->setEndpoint(APP->epIp(), APP->epPort());
+    second->setEndpoint(CONFIG.remoteIP, CONFIG.remotePort);
     second->setSessionType(static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA));
     second->start();
 

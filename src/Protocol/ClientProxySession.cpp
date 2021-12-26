@@ -1,5 +1,6 @@
 #include "ClientProxySession.hpp"
 #include "Application.hpp"
+#include "Config.hpp"
 
 ClientProxySession::~ClientProxySession() {
 //    AAP->log("ClientProxySession::~ClientProxySession %p", this);
@@ -11,9 +12,9 @@ void ClientProxySession::setSessionType(const uint8_t &sessionType) {
 
 void ClientProxySession::startProxying(std::shared_ptr<ProxyDataSession> clientSession, bool) {
     auto self = Session::shared_from_this<ClientProxySession>();
-    clientSession->socket().setSSLParameters("server1");
+    clientSession->socket().setSSLParameters(CONFIG.verifyHost, CONFIG.keysPath);
     clientSession->startSSL(true, [self, clientSession]() {
-        self->startHandshake(clientSession, self->m_sessionType, APP->serverId(), true);
+        self->startHandshake(clientSession, self->m_sessionType, CONFIG.serverId, true);
     });
 }
 

@@ -1,8 +1,9 @@
 #include "ClientInstance.hpp"
 #include "Base/Network/Server.hpp"
 #include "Protocol/ClientProxySession.hpp"
-#include "Application.hpp"
 #include "Protocol/ConnectionType.hpp"
+#include "Application.hpp"
+#include "Config.hpp"
 
 ClientInstance::ClientInstance(boost::asio::io_service &io)
     : Instance(io),
@@ -11,11 +12,11 @@ ClientInstance::ClientInstance(boost::asio::io_service &io)
 
 void ClientInstance::start() {
     m_server->setSessionInit([](ClientProxySession* session) {
-        session->setEndpoint(APP->epIp(), APP->epPort());
+        session->setEndpoint(CONFIG.remoteIP, CONFIG.remotePort);
         session->setSessionType(static_cast<uint8_t>(ConnectionType::CLIENT));
     });
 
-    m_server->start(APP->ip(), APP->port());
+    m_server->start(CONFIG.listenIP, CONFIG.listenPort);
 }
 
 void ClientInstance::stop() {

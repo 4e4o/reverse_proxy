@@ -1,5 +1,6 @@
 #include "ServerSession.hpp"
-#include "Base/AApplication.h"
+#include "Application.hpp"
+#include "Config.hpp"
 
 using boost::signals2::connection;
 
@@ -16,7 +17,7 @@ uint8_t ServerSession::serverId() const {
 
 void ServerSession::startImpl() {
     auto self = shared_from_this<ServerSession>();
-    socket().setSSLParameters("client1");
+    socket().setSSLParameters(CONFIG.verifyHost, CONFIG.keysPath);
     startSSL(false, [self]() {
         self->readClientType();
     });

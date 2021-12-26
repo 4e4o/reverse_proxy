@@ -1,36 +1,34 @@
 #include "TCPSocket.hpp"
 #include "Base/AApplication.h"
 
-static boost::asio::ssl::context initContext() {
+static boost::asio::ssl::context* createSSLContext() {
     using namespace boost::asio::ssl;
 
-    context ctx(boost::asio::ssl::context::tls);
-    ctx.set_options(context::default_workarounds
-                    | context::no_sslv2
-                    | context::no_sslv3
-                    | context::no_tlsv1
-                    | context::no_tlsv1_1);
+    context* ctx = new context(boost::asio::ssl::context::tls);
+    ctx->set_options(context::default_workarounds
+                     | context::no_sslv2
+                     | context::no_sslv3
+                     | context::no_tlsv1
+                     | context::no_tlsv1_1);
 
-    ctx.load_verify_file("ca.crt");
-    ctx.use_certificate_file("entity.crt", context::pem);
-    ctx.use_private_key_file("entity.key", context::pem);
+    ctx->load_verify_file("ca.crt");
+    ctx->use_certificate_file("entity.crt", context::pem);
+    ctx->use_private_key_file("entity.key", context::pem);
     return ctx;
 }
 
 TCPSocket::TCPSocket(boost::asio::io_service &io)
-    : m_ssl(false),
-      m_sslContext(initContext()),
-      m_socket(io, m_sslContext) {
+    : TCPSocket(boost::asio::ip::tcp::socket(io)) {
+}
+
+TCPSocket::TCPSocket(TCPSocket&& socket)
+    : TCPSocket(std::move(socket.m_socket->next_layer())) {
 }
 
 TCPSocket::TCPSocket(boost::asio::ip::tcp::socket&& socket)
     : m_ssl(false),
-      m_sslContext(initContext()),
-      m_socket(std::move(socket), m_sslContext) {
-}
-
-TCPSocket::TCPSocket(TCPSocket&& socket)
-    : TCPSocket(std::move(socket.m_socket.next_layer())) {
+      m_sslContext(createSSLContext()),
+      m_socket(new TSocket(std::move(socket), *m_sslContext)) {
 }
 
 TCPSocket::~TCPSocket() {
@@ -41,7 +39,7 @@ void TCPSocket::init() {
     using boost::asio::socket_base;
     using boost::asio::detail::socket_option::integer;
 
-    auto& socket = m_socket.next_layer();
+    auto& socket = m_socket->next_layer();
 
     socket.set_option(tcp::no_delay(true));
     socket.set_option(socket_base::keep_alive(true));
@@ -53,12 +51,12 @@ void TCPSocket::init() {
 void TCPSocket::close() {
     if (m_ssl) {
         try {
-            m_socket.shutdown();
+            m_socket->shutdown();
         } catch(...) { }
     }
 
     try {
-        m_socket.next_layer().close();
+        m_socket->next_layer().close();
     } catch(...) { }
 }
 
@@ -67,16 +65,16 @@ void TCPSocket::initSSL(boost::asio::ssl::stream_base::handshake_type type,
     using namespace boost::asio::ssl;
 
     m_ssl = true;
-    m_socket.set_verify_mode(verify_peer);
+    m_socket->set_verify_mode(verify_peer);
 
 #if BOOST_VERSION < 107300
-    m_socket.set_verify_callback(rfc2818_verification(verifyHost));
+    m_socket->set_verify_callback(rfc2818_verification(verifyHost));
 #else
-    m_socket.set_verify_callback(host_name_verification(verifyHost));
+    m_socket->set_verify_callback(host_name_verification(verifyHost));
 #endif // BOOST_VERSION < 107300
 
-    m_socket.async_handshake(type,
-                             [r] (boost::system::error_code error) {
+    m_socket->async_handshake(type,
+                              [r] (boost::system::error_code error) {
         AAP->log("initSSL async_handshake error = %s", error.message().c_str());
         r(!error);
     });

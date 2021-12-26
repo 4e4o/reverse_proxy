@@ -22,32 +22,34 @@ public:
     template<typename... Args>
     void async_read_some(Args&&... args) {
         if (m_ssl)
-            m_socket.async_read_some(std::forward<Args>(args)...);
+            m_socket->async_read_some(std::forward<Args>(args)...);
         else
-            m_socket.next_layer().async_read_some(std::forward<Args>(args)...);
+            m_socket->next_layer().async_read_some(std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     void async_write_some(Args&&... args) {
         if (m_ssl)
-            m_socket.async_write_some(std::forward<Args>(args)...);
+            m_socket->async_write_some(std::forward<Args>(args)...);
         else
-            m_socket.next_layer().async_write_some(std::forward<Args>(args)...);
+            m_socket->next_layer().async_write_some(std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     void async_connect(Args&&... args) {
-        m_socket.next_layer().async_connect(std::forward<Args>(args)...);
+        m_socket->next_layer().async_connect(std::forward<Args>(args)...);
     }
 
+    void init();
     void close();
 
-    void init();
-
 private:
+    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> TSocket;
+    typedef boost::asio::ssl::context TContext;
+
     bool m_ssl;
-    boost::asio::ssl::context m_sslContext;
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> m_socket;
+    std::unique_ptr<TContext> m_sslContext;
+    std::unique_ptr<TSocket> m_socket;
 };
 
 #endif // TCP_SOCKET_H

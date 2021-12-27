@@ -5,7 +5,7 @@
 
 #define GET_PARAM(KEY, VAR, TYPE, CRITICAL) { \
     const auto &p = pt.get_optional<TYPE>(KEY); \
-    if (p.has_value()) { \
+    if (p) { \
         result->VAR = p.get(); \
     } else { \
         if (CRITICAL) \

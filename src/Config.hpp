@@ -19,6 +19,7 @@ struct Config {
     int remotePort;
     std::string verifyHost;
     std::string keysPath;
+    bool cryptData;
 
     static Config* load(const std::string&);
 };

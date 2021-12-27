@@ -90,7 +90,7 @@ void ServerSession::finishClientHandshake(TEvent e) {
 
     onWriteDone.connect_extended([self, e](const connection &c) {
         c.disconnect();
-        self->socket().setSSL(false);
+        self->socket().setSSL(CONFIG.cryptData);
         self->onData.connect_extended([e](const connection &c, const uint8_t* ptr, std::size_t) {
             c.disconnect();
             if (ptr[0] == 1)

@@ -1,6 +1,7 @@
 #include "ClientHandshake.hpp"
 #include "Base/Network/Session.hpp"
-#include "Base/AApplication.h"
+#include "Application.hpp"
+#include "Config.hpp"
 
 using boost::signals2::connection;
 
@@ -46,7 +47,7 @@ void ClientHandshake::finalStep(TSession s) {
     }
 
     // strip ssl layer
-    s->socket().setSSL(false);
+    s->socket().setSSL(CONFIG.cryptData);
 
     auto self = shared_from_this();
 

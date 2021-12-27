@@ -32,6 +32,8 @@ std::istream& operator>> (std::istream &in, Mode& m) {
 Config* Config::load(const std::string& f) {
     std::unique_ptr<Config> result(new Config());
 
+    result->cryptData = false;
+
     boost::property_tree::ptree pt;
     boost::property_tree::ini_parser::read_ini(f, pt);
 
@@ -51,6 +53,7 @@ Config* Config::load(const std::string& f) {
 
     GET_PARAM("Global.VerifyHost", verifyHost, std::string, false);
     GET_PARAM("Global.KeysPath", keysPath, std::string, false);
+    GET_PARAM("Global.CryptData", cryptData, bool, false);
 
     return result.release();
 }

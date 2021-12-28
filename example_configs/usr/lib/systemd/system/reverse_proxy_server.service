@@ -1,0 +1,11 @@
+[Unit]
+Description=reverse proxy
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/computer/workspace/reverse_proxy --c /etc/reverse_proxy/server1.ini
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

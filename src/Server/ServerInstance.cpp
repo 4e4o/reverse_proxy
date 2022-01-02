@@ -55,6 +55,7 @@ void ServerInstance::onNewServiceControl(TSession s) {
     auto ses = m_control.find(s->serverId());
 
     if (ses != m_control.end()) {
+        AAP->log("ServerInstance::onNewServiceControl closing existing control session %p %i", ses->second.get(), s->serverId());
         ses->second->close();
         m_control.erase(s->serverId());
     }
@@ -84,14 +85,14 @@ void ServerInstance::onServiceRequest(TSession s) {
     m_serviceRequests[s->serverId()].push(s);
     controlSession->second->requestDataSession();
 
-    AAP->log("ServerInstance::onServiceRequest %p %i", s.get(), s->serverId());
+    AAP->log("ServerInstance::onServiceRequest %p %i %i", s.get(), s->serverId(), m_serviceRequests[s->serverId()].size());
 }
 
 void ServerInstance::onServiceDataSession(TSession s) {
     auto r = m_serviceRequests.find(s->serverId());
 
     if (r == m_serviceRequests.end()) {
-        AAP->log("ServerInstance::onServiceDataSession no server with id id %i, %p", s->serverId(), this);
+        AAP->log("ServerInstance::onServiceDataSession no server with id %i, %p", s->serverId(), this);
         return;
     }
 
@@ -102,7 +103,7 @@ void ServerInstance::onServiceDataSession(TSession s) {
     if (sq.empty())
         m_serviceRequests.erase(s->serverId());
 
-    AAP->log("ServerInstance::onServiceDataSession %p %i", s.get(), s->serverId());
+    AAP->log("ServerInstance::onServiceDataSession %p %p %i %i", s.get(), requester.get(), s->serverId(), sq.size());
 
     requester->setDataSession(s);
 }

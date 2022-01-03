@@ -62,8 +62,19 @@ void ServerInstance::onNewServiceControl(TSession s) {
 
     s->onClose.connect_extended([this, s](const connection &c) {
         c.disconnect();
-        m_control.erase(s->serverId());
-        AAP->log("ServerInstance::onNewServiceControl onClose %p %i", s.get(), s->serverId());
+        post([s, this]() {
+            auto ses = m_control.find(s->serverId());
+
+            if (ses == m_control.end())
+                return;
+
+            const bool canErase = ses->second.get() == s.get();
+
+            if (canErase)
+                m_control.erase(s->serverId());
+
+            AAP->log("ServerInstance::onNewServiceControl onClose %p %i %i", s.get(), s->serverId(), canErase);
+        });
     });
 
     m_control[s->serverId()] = s;

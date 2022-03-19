@@ -1,22 +1,29 @@
 #include "ClientInstance.hpp"
-#include "Base/Network/Server.hpp"
-#include "Protocol/ClientProxySession.hpp"
-#include "Protocol/ConnectionType.hpp"
-#include "Application.hpp"
-#include "Config.hpp"
+#include "Config/ConfigInstance.hpp"
 
-ClientInstance::ClientInstance(boost::asio::io_service &io)
-    : Instance(io),
-      m_server(new Server<ClientProxySession>(io)) {
+#include <Misc/Debug.hpp>
+#include <Network/Server.hpp>
+#include <Network/Session/Session.hpp>
+
+#define WAIT_SECOND_SESSION_TIMEOUT     TSeconds(10)
+
+ClientInstance::ClientInstance(boost::asio::io_context &io)
+    : BaseClientInstance(io),
+      m_server(new Server(io)) {
+    m_server->stopped.connect(stopped);
 }
 
 void ClientInstance::start() {
-    m_server->setSessionInit([](ClientProxySession* session) {
-        session->setEndpoint(CONFIG.remoteIP, CONFIG.remotePort);
-        session->setSessionType(static_cast<uint8_t>(ConnectionType::CLIENT));
+    m_server->newSession.connect([this](TWSession ws) {
+        debug_print(boost::format("Client server incoming session %1%") % ws.lock().get());
+        ws.lock()->started.connect([this, ws] {
+            auto s = ws.lock();
+            s->wait(WAIT_SECOND_SESSION_TIMEOUT);
+            proxy(ConnectionType::CLIENT, s);
+        });
     });
 
-    m_server->start(CONFIG.listenIP, CONFIG.listenPort);
+    m_server->start(config()->listenIP(), config()->listenPort());
 }
 
 void ClientInstance::stop() {

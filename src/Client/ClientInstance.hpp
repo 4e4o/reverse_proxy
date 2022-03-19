@@ -1,20 +1,19 @@
 #ifndef CLIENT_INSTANCE_HPP
 #define CLIENT_INSTANCE_HPP
 
-#include "Instance.hpp"
+#include "BaseClientInstance.hpp"
 
-class ClientProxySession;
-template<class Session> class Server;
+class Server;
 
-class ClientInstance : public Instance {
+class ClientInstance : public BaseClientInstance {
 public:
-    ClientInstance(boost::asio::io_service &io);
+    ClientInstance(boost::asio::io_context &io);
 
 private:
     void start() override final;
     void stop() override final;
 
-    std::shared_ptr<Server<ClientProxySession>> m_server;
+    std::shared_ptr<Server> m_server;
 };
 
 #endif // CLIENT_INSTANCE_HPP

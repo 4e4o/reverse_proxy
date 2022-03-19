@@ -1,0 +1,64 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            fa:fa:6e:bc:08:25:b5:20:f5:20:e4:1e:5b:11:8c:8f
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: CN=ChangeMe
+        Validity
+            Not Before: Mar  7 17:25:14 2022 GMT
+            Not After : Mar  4 17:25:14 2032 GMT
+        Subject: CN=client3
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (521 bit)
+                pub:
+                    04:00:9d:16:1f:50:03:01:bd:61:5d:76:87:50:0e:
+                    c2:56:68:ea:c3:ab:11:9e:25:c4:86:f5:14:95:72:
+                    7e:44:8a:03:f1:0d:d2:f9:d3:39:9d:7d:52:a9:8a:
+                    f1:a7:70:da:d0:7e:7b:01:d6:64:e0:7b:c7:6e:ea:
+                    34:38:3d:da:95:82:e3:00:9b:fa:2a:ed:fd:75:6d:
+                    e4:b4:91:e7:fc:40:1d:12:03:8e:9d:2d:61:4b:16:
+                    36:bd:ba:07:ab:41:1a:40:b1:d9:8b:0a:c3:67:23:
+                    af:d1:44:11:7f:95:bd:e4:fa:39:70:b0:70:13:be:
+                    6c:d1:39:3f:cf:36:3b:90:4c:40:03:d4:2e
+                ASN1 OID: secp521r1
+                NIST CURVE: P-521
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                C7:8B:C3:D4:21:33:25:81:1C:5E:D6:75:68:81:35:20:8A:DF:C6:82
+            X509v3 Authority Key Identifier: 
+                keyid:D8:D9:D9:ED:0E:7E:53:0F:F6:98:32:AA:23:D3:53:99:56:BA:56:C2
+                DirName:/CN=ChangeMe
+                serial:27:F2:3B:25:B0:71:D9:A8:17:47:4E:96:F2:79:DF:0D:65:AC:7C:64
+
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            X509v3 Key Usage: 
+                Digital Signature
+    Signature Algorithm: ecdsa-with-SHA256
+         30:81:88:02:42:01:9c:4b:59:f6:d3:48:26:b2:2c:eb:c3:f1:
+         d5:23:75:c1:75:09:b5:bc:87:28:95:fd:7d:d1:81:fb:d3:b2:
+         73:82:92:ac:94:bd:7e:c8:a0:e1:73:79:34:7f:06:c6:7d:4d:
+         1d:df:79:39:46:18:a6:85:0d:cb:50:83:2b:07:fc:02:3f:02:
+         42:01:a2:8c:c3:16:3d:54:4d:f3:a5:37:ee:0a:97:4a:b0:a7:
+         0a:c3:d4:cf:d7:40:68:31:3f:97:f1:ee:c2:dc:d3:b1:20:be:
+         16:bc:26:73:06:7d:b5:dc:3c:d8:b0:05:69:e5:94:4b:ac:f0:
+         3a:15:8e:76:28:fd:a5:db:35:6a:a2:bf:eb
+-----BEGIN CERTIFICATE-----
+MIICTDCCAa2gAwIBAgIRAPr6brwIJbUg9SDkHlsRjI8wCgYIKoZIzj0EAwIwEzER
+MA8GA1UEAwwIQ2hhbmdlTWUwHhcNMjIwMzA3MTcyNTE0WhcNMzIwMzA0MTcyNTE0
+WjASMRAwDgYDVQQDDAdjbGllbnQzMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQA
+nRYfUAMBvWFddodQDsJWaOrDqxGeJcSG9RSVcn5EigPxDdL50zmdfVKpivGncNrQ
+fnsB1mTge8du6jQ4PdqVguMAm/oq7f11beS0kef8QB0SA46dLWFLFja9ugerQRpA
+sdmLCsNnI6/RRBF/lb3k+jlwsHATvmzROT/PNjuQTEAD1C6jgZ8wgZwwCQYDVR0T
+BAIwADAdBgNVHQ4EFgQUx4vD1CEzJYEcXtZ1aIE1IIrfxoIwTgYDVR0jBEcwRYAU
+2NnZ7Q5+Uw/2mDKqI9NTmVa6VsKhF6QVMBMxETAPBgNVBAMMCENoYW5nZU1lghQn
+8jslsHHZqBdHTpbyed8NZax8ZDATBgNVHSUEDDAKBggrBgEFBQcDAjALBgNVHQ8E
+BAMCB4AwCgYIKoZIzj0EAwIDgYwAMIGIAkIBnEtZ9tNIJrIs68Px1SN1wXUJtbyH
+KJX9fdGB+9Oyc4KSrJS9fsig4XN5NH8Gxn1NHd95OUYYpoUNy1CDKwf8Aj8CQgGi
+jMMWPVRN86U37gqXSrCnCsPUz9dAaDE/l/HuwtzTsSC+FrwmcwZ9tdw82LAFaeWU
+S6zwOhWOdij9pds1aqK/6w==
+-----END CERTIFICATE-----

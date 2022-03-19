@@ -1,125 +1,75 @@
 #include "ServiceInstance.hpp"
 #include "ServiceControlSession.hpp"
-#include "Base/Network/Client.hpp"
-#include "Base/Network/Proxy/ProxyDataSession.hpp"
-#include "Protocol/ClientProxySession.hpp"
-#include "Protocol/ConnectionType.hpp"
-#include "Application.hpp"
-#include "Config.hpp"
+#include "Config/ConfigInstance.hpp"
+#include "Protocol/ClientSession.hpp"
 
-using boost::signals2::connection;
+#include <Misc/Debug.hpp>
+#include <Misc/Lifecycle.hpp>
+#include <Network/Client.hpp>
 
-ServiceInstance::ServiceInstance(boost::asio::io_service &io)
-    : Instance(io),
-      m_stopped(false),
-      m_reconnectTimer(io) {
+#define RECONNECT_TIMEOUT               TSeconds(10)
+#define WAIT_SECOND_SESSION_TIMEOUT     TSeconds(10)
+
+ServiceInstance::ServiceInstance(boost::asio::io_context &io)
+    : BaseClientInstance(io),
+      m_stopped(false) {
 }
 
 ServiceInstance::~ServiceInstance() {
 }
 
-void ServiceInstance::startReconnectTimer() {
-    if (m_stopped)
-        return;
-
-    m_reconnectTimer.expires_after(boost::asio::chrono::seconds(RECONNECT_TIMEOUT_SEC));
-    m_reconnectTimer.async_wait([this](const boost::system::error_code& ec) {
-        AAP->log("startReconnectTimer tick %i", ec);
-        if (ec == boost::asio::error::operation_aborted)
+void ServiceInstance::start() {
+    post([this] {
+        if (m_stopped)
             return;
 
-        start();
-    });
-}
+        debug_print(boost::format("ServiceInstance::start %1%") % this);
 
-void ServiceInstance::start() {
-    post([this] () {
-        AAP->log("ServiceInstance::start %p", this);
+        std::shared_ptr<Client> client(new Client(io(), RECONNECT_TIMEOUT));
+        client->registerType<Session, ServiceControlSession, Socket*>();
+        client->enableSSL();
 
-        std::shared_ptr<ServiceControlSession> session(new ServiceControlSession(io()));
-        std::shared_ptr<Client> client(new Client(io()));
-        client->setSession(session);
-
-        session->onDestroy.connect_extended([this](const connection &c) {
-            c.disconnect();
-
-            post([this]() {
-                startReconnectTimer();
+        client->newSession.connect([this](TWSession ws) {
+            auto session = std::static_pointer_cast<ServiceControlSession>(ws.lock());
+            session->setConfig(config());
+            session->dataSessionRequest.connect([this] {
+                post([this] {
+                    startDataChannels();
+                });
             });
         });
 
-        client->onConnect.connect_extended([this, session](const connection &c, bool connected) {
-            c.disconnect();
-
-            if (connected) {
-                post([this, session]() {
-                    setControlSession(session);
-                });
-            }
-        });
-
-        client->connect(CONFIG.remoteIP, CONFIG.remotePort);
+        Lifecycle::connectTrack(stopped, client, &Client::stop);
+        client->start(config()->remoteIP(), config()->remotePort());
     });
 }
 
 void ServiceInstance::stop() {
-    post([this]() {
+    post([this] {
         if (m_stopped)
             return;
 
         m_stopped = true;
-
-        try {
-            m_reconnectTimer.cancel();
-        } catch(...) { }
-
-        closeClients();
+        stopped();
     });
-}
-
-void ServiceInstance::setControlSession(std::shared_ptr<ServiceControlSession> s) {
-    AAP->log("ServiceInstance::setControlSession connected to remote server %p", this);
-
-    s->dataSessionRequest.connect([this]() {
-        post([this] {
-            startDataChannels();
-        });
-    });
-
-    closeClients.connect(decltype(closeClients)::slot_type(
-                             &ServiceControlSession::close, s.get()).track_foreign(s));
-
-    s->start();
 }
 
 void ServiceInstance::startDataChannels() {
-    AAP->log("ServiceInstance::startDataChannels %p", this);
-
-    std::shared_ptr<Session> session(new Session(io()));
+    debug_print(boost::format("ServiceInstance::startDataChannels %1%") % this);
+    // сессия к локальному сервису, реконнекты не включаем
     std::shared_ptr<Client> client(new Client(io()));
-    client->setSession(session);
 
-    client->onConnect.connect_extended([this, session](const connection &c, bool connected) {
-        c.disconnect();
+    client->newSession.connect([this](TWSession ws) {
+        auto s = ws.lock();
+        s->started.connect([this, ws] {
+            auto s = ws.lock();
+            s->wait(WAIT_SECOND_SESSION_TIMEOUT);
+            proxy(ConnectionType::SERVICE_CLIENT_DATA, s);
+        });
 
-        if (connected) {
-            post([this, session]{
-                startDataClient(session);
-            });
-        }
+        Lifecycle::connectTrack(stopped, s, &Session::close);
     });
 
-    client->connect(CONFIG.listenIP, CONFIG.listenPort);
-}
-
-void ServiceInstance::startDataClient(std::shared_ptr<Session> first) {
-    AAP->log("ServiceInstance::startDataClient %p", this);
-
-    std::shared_ptr<ClientProxySession> second(new ClientProxySession(io(), std::move(first->socket())));
-    second->setEndpoint(CONFIG.remoteIP, CONFIG.remotePort);
-    second->setSessionType(static_cast<uint8_t>(ConnectionType::SERVICE_CLIENT_DATA));
-    second->start();
-
-    closeClients.connect(decltype(closeClients)::slot_type(
-                             &ClientProxySession::close, second.get()).track_foreign(second));
+    Lifecycle::connectTrack(stopped, client, &Client::stop);
+    client->start(config()->listenIP(), config()->listenPort());
 }

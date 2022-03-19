@@ -1,33 +1,24 @@
 #ifndef HEADER_APPLICATION_HPP
 #define HEADER_APPLICATION_HPP
 
-#include "Base/AApplication.h"
+#include <BaseConfigApplication.h>
 
-#include <memory>
+#include <list>
 
-#define APP         static_cast<Application*>(AAP)
-#define CONFIG      APP->config()
+class Instance;
 
-class IRunnable;
-class ThreadPool;
-struct Config;
-
-class Application : public AApplication {
+class Application : public BaseConfigApplication {
 public:
     Application(int argc, char** argv);
     ~Application();
 
-    int exec() override final;
-
-    const Config& config() const;
+    bool start(TConfigItems&) override final;
 
 private:
-    void onExitRequest() override;
-    bool processArgs();
+    void doExit() override final;
 
-    std::unique_ptr<Config> m_config;
-    std::shared_ptr<ThreadPool> m_threadPool;
-    std::shared_ptr<IRunnable> m_instance;
+    typedef std::shared_ptr<Instance> TInstancePtr;
+    std::list<TInstancePtr> m_instances;
 };
 
 #endif // HEADER_APPLICATION_HPP

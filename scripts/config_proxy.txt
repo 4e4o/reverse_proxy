@@ -1,0 +1,12 @@
+{
+    "config":[
+        {
+            "Mode": "proxy",
+            "ListenIP":"127.0.0.1",
+            "ListenPort":34343,
+            "VerifyHost":"client1",
+            "KeysPath":"/mnt/disk2/workspace/coding/reverse_proxy/scripts/keys/cur/keys_server/",
+            "CryptData":0
+        }
+    ]
+}

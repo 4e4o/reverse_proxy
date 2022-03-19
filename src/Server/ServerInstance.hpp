@@ -4,30 +4,39 @@
 #include "Instance.hpp"
 
 #include <map>
-#include <queue>
+#include <list>
 
-class ServerSession;
-template<class Session> class Server;
+class Server;
+class ServerControlSession;
+class ServerClientSession;
+class ServerDataSession;
 
 class ServerInstance : public Instance {
 public:
-    ServerInstance(boost::asio::io_service &io_service);
+    ServerInstance(boost::asio::io_context &);
     ~ServerInstance();
 
     void start() override final;
     void stop() override final;
 
 private:
-    typedef std::shared_ptr<ServerSession> TSession;
-    typedef std::queue<TSession> TSessionQueue;
+    typedef std::shared_ptr<ServerClientSession> TClientSession;
+    typedef std::shared_ptr<ServerControlSession> TControlSession;
+    typedef std::shared_ptr<ServerDataSession> TDataSession;
 
-    void onNewServiceControl(TSession);
-    void onServiceRequest(TSession);
-    void onServiceDataSession(TSession);
+    typedef std::list<TClientSession> TClientSessions;
 
-    std::shared_ptr<Server<ServerSession>> m_server;
-    std::map<uint8_t, TSession> m_control;
-    std::map<uint8_t, TSessionQueue> m_serviceRequests;
+    void addControl(TControlSession);
+    void removeControl(TControlSession);
+
+    void addRequester(TClientSession);
+    void removeRequester(TClientSession);
+
+    void onDataSession(TDataSession);
+
+    std::shared_ptr<Server> m_server;
+    std::map<uint8_t, TControlSession> m_controls;
+    std::map<uint8_t, TClientSessions> m_requesters;
 };
 
 #endif // SERVER_INSTANCE_HPP

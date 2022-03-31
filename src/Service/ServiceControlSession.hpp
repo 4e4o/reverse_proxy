@@ -1,7 +1,7 @@
 #ifndef SERVICE_CONTROL_SESSION_HPP
 #define SERVICE_CONTROL_SESSION_HPP
 
-#include "Protocol/ClientSession.hpp"
+#include "Protocol/ClientHandshake.hpp"
 
 class ServiceControlSession : public ClientSession {
 public:
@@ -10,8 +10,7 @@ public:
     boost::signals2::signal<void()> dataSessionRequest;
 
 private:
-    void startImpl() override final;
-    void receiveRequests();
+    TAwaitVoid work() override final;
 };
 
 #endif // SERVICE_CONTROL_SESSION_HPP

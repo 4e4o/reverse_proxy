@@ -4,37 +4,24 @@
 #include "Config/ConfigHolder.hpp"
 #include "Protocol/ConnectionType.hpp"
 
-#include <memory>
-
-class Session;
+#include <Network/Session/Session.hpp>
 
 // Хэндшйэк для прокси сервера
 
-class ServerHandshake : public ConfigHolder {
+class ServerHandshake : public Session, public ConfigHolder {
 public:
-    ServerHandshake(Session*);
-    ServerHandshake(Session*, ServerHandshake*);
+    ServerHandshake(Socket*);
+    ServerHandshake(Socket*, ServerHandshake*);
     ~ServerHandshake();
 
-    void startHandshake();
-
-    ConnectionType type() const;
     uint8_t serverId() const;
 
 protected:
-    virtual void onClient() { }
-    virtual void onClientData() { }
-    virtual void onHandshakeDone() { }
-
-    void finishHandshake();
+    TAwaitConnectionType defineType();
+    TAwaitVoid finishHandshake();
 
 private:
-    void readClientType();
-    void onControl();
-
-    ConnectionType m_type;
     uint8_t m_serverId;
-    Session *m_session;
 };
 
 #endif // SERVER_HANDSHAKE_HPP

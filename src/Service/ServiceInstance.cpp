@@ -1,75 +1,59 @@
 #include "ServiceInstance.hpp"
 #include "ServiceControlSession.hpp"
 #include "Config/ConfigInstance.hpp"
-#include "Protocol/ClientSession.hpp"
 
 #include <Misc/Debug.hpp>
-#include <Misc/Lifecycle.hpp>
 #include <Network/Client.hpp>
+#include <Network/Session/Proxy/Proxy.hpp>
 
-#define RECONNECT_TIMEOUT               TSeconds(10)
-#define WAIT_SECOND_SESSION_TIMEOUT     TSeconds(10)
+using namespace boost::asio;
+using namespace std::literals::chrono_literals;
 
-ServiceInstance::ServiceInstance(boost::asio::io_context &io)
-    : BaseClientInstance(io),
-      m_stopped(false) {
+#define RECONNECT_TIMEOUT   10s
+
+ServiceInstance::ServiceInstance(io_context &io)
+    : BaseClientInstance(io, ConnectionType::SERVICE_CLIENT_DATA) {
 }
 
 ServiceInstance::~ServiceInstance() {
 }
 
-void ServiceInstance::start() {
-    post([this] {
-        if (m_stopped)
-            return;
+TAwaitVoid ServiceInstance::run() {    
+    debug_print_this("");
 
-        debug_print(boost::format("ServiceInstance::start %1%") % this);
+    TClient client(new Client(io(), RECONNECT_TIMEOUT));
+    client->registerType<Session, ServiceControlSession, Socket*>();
+    client->enableSSL();
 
-        std::shared_ptr<Client> client(new Client(io(), RECONNECT_TIMEOUT));
-        client->registerType<Session, ServiceControlSession, Socket*>();
-        client->enableSSL();
-
-        client->newSession.connect([this](TWSession ws) {
-            auto session = std::static_pointer_cast<ServiceControlSession>(ws.lock());
-            session->setConfig(config());
-            session->dataSessionRequest.connect([this] {
-                post([this] {
-                    startDataChannels();
-                });
+    client->setHandler([this](TWSession ws) {
+        auto session = std::static_pointer_cast<ServiceControlSession>(ws.lock());
+        session->setConfig(config());
+        session->dataSessionRequest.connect([this] {
+            post([this] {
+                startProxy();
             });
         });
-
-        Lifecycle::connectTrack(stopped, client, &Client::stop);
-        client->start(config()->remoteIP(), config()->remotePort());
     });
+
+    co_await client->co_start(use_awaitable, config()->remoteIP(), config()->remotePort());
+    co_return;
 }
 
-void ServiceInstance::stop() {
-    post([this] {
-        if (m_stopped)
-            return;
+void ServiceInstance::startProxy() {
+    debug_print_this("");
 
-        m_stopped = true;
-        stopped();
-    });
-}
-
-void ServiceInstance::startDataChannels() {
-    debug_print(boost::format("ServiceInstance::startDataChannels %1%") % this);
     // сессия к локальному сервису, реконнекты не включаем
-    std::shared_ptr<Client> client(new Client(io()));
+    TClient client(new Client(io()));
 
-    client->newSession.connect([this](TWSession ws) {
+    client->setHandler([this](TWSession ws) {
+        debug_print_this("new local service session");
+
         auto s = ws.lock();
-        s->started.connect([this, ws] {
-            auto s = ws.lock();
-            s->wait(WAIT_SECOND_SESSION_TIMEOUT);
-            proxy(ConnectionType::SERVICE_CLIENT_DATA, s);
-        });
-
-        Lifecycle::connectTrack(stopped, s, &Session::close);
+        Proxy::TProxy proxy(new Proxy(io(), s, this));
+        registerStop(proxy);
+        proxy->start();
     });
 
-    Lifecycle::connectTrack(stopped, client, &Client::stop);
+    registerStop(client);
     client->start(config()->listenIP(), config()->listenPort());
 }

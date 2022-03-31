@@ -7,14 +7,15 @@
 #include <Network/Session/Operations/SessionReader.hpp>
 #include <Network/Session/Operations/SessionWriter.hpp>
 
-#define START_TIMEOUT       TSeconds(5)
-#define RESPONSE_TIMEOUT    TSeconds(6)
+using namespace std::literals::chrono_literals;
 
-ClientHandshake::ClientHandshake(Session* s)
-    : m_skipSSLStrip(true),
-      m_sessionType(ConnectionType::CLIENT),
-      m_session(s) {
-    m_session->setTimeout(Session::Timeouts::START, START_TIMEOUT);
+#define DEFAULT_TIMEOUT 5s
+
+ClientHandshake::ClientHandshake(Socket* s)
+    : Session(s),
+      m_skipSSLStrip(true),
+      m_sessionType(ConnectionType::CLIENT) {
+    setTimeout(Timeout::START, DEFAULT_TIMEOUT);
 }
 
 ClientHandshake::~ClientHandshake() {
@@ -28,38 +29,35 @@ void ClientHandshake::setSkipSSLStrip(bool skipSSLStrip) {
     m_skipSSLStrip = skipSSLStrip;
 }
 
-void ClientHandshake::startHandshake() {
-    sendSessionType();
+TAwaitVoid ClientHandshake::prepare() {
+    co_await Session::prepare();
+
+    SSLSocket* sock = socket<SSLSocket>();
+    sock->setSSLParameters(config()->verifyHost(), config()->keysPath());
+    sock->setClient(true);
 }
 
-void ClientHandshake::sendSessionType() {
+TAwaitVoid ClientHandshake::work() {
+    co_await Session::work();
+
     const uint8_t id = config()->serverId();
-    m_session->writer()([this] {
-        onSessionTypeSended();
-    }, { BYTE(m_sessionType), id });
-}
+    CO_SES_WRITE(this, AS_BYTE(m_sessionType), id);
 
-void ClientHandshake::onSessionTypeSended() {
-    m_session->setTimeout(Session::Timeouts::READ, RESPONSE_TIMEOUT);
-    m_session->reader()([this](const uint8_t *ptr) {
-        m_session->setTimeout(Session::Timeouts::READ);
-        const bool success = ptr[0];
-        debug_print(boost::format("ClientHandshake success = %1%") % (int)success);
+    co_await timeout(reader().all(1), DEFAULT_TIMEOUT);
+    const bool success = reader().ptr()[0];
 
-        if (success)
-            finalStep();
-    }, 1);
-}
+    debug_print_this(fmt("handshake success = %1%") % (int)success);
 
-void ClientHandshake::finalStep() {
-    if (m_skipSSLStrip) {
-        onHandshakeDone();
-        return;
+    if (!success) {
+        throwGenericCoroutineError();
     }
 
-    // strip ssl layer if needed
-    SSLSocket* sock = m_session->socket<SSLSocket>();
-    sock->setSSL(config()->cryptData());
+    if (!m_skipSSLStrip) {
+        // strip ssl layer if needed
+        SSLSocket* sock = socket<SSLSocket>();
+        sock->setSSL(config()->cryptData());
+        CO_SES_WRITE(this, 1);
+    }
 
-    m_session->writer()([this] { onHandshakeDone(); }, {1});
+    co_return;
 }

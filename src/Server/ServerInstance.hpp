@@ -3,40 +3,33 @@
 
 #include "Instance.hpp"
 
-#include <map>
-#include <list>
+#include <Network/Session/Proxy/AsyncProxyProvider.hpp>
 
 class Server;
 class ServerControlSession;
-class ServerClientSession;
-class ServerDataSession;
+class ServerProxySession;
 
-class ServerInstance : public Instance {
+class ServerInstance : public Instance, public AsyncProxyProviderDelegate {
 public:
     ServerInstance(boost::asio::io_context &);
     ~ServerInstance();
 
-    void start() override final;
-    void stop() override final;
-
 private:
-    typedef std::shared_ptr<ServerClientSession> TClientSession;
-    typedef std::shared_ptr<ServerControlSession> TControlSession;
-    typedef std::shared_ptr<ServerDataSession> TDataSession;
+    TAwaitVoid run() override;
+    TAwaitVoid onStop() override;
 
-    typedef std::list<TClientSession> TClientSessions;
+    TSessionClass classify(TSession) override;
+    TAwaitBool startAsyncRequest(TSessionClass) override;
+
+    typedef std::shared_ptr<ServerProxySession> TProxySession;
+    typedef std::shared_ptr<ServerControlSession> TControlSession;
 
     void addControl(TControlSession);
     void removeControl(TControlSession);
 
-    void addRequester(TClientSession);
-    void removeRequester(TClientSession);
-
-    void onDataSession(TDataSession);
-
     std::shared_ptr<Server> m_server;
-    std::map<uint8_t, TControlSession> m_controls;
-    std::map<uint8_t, TClientSessions> m_requesters;
+    std::shared_ptr<AsyncProxyProvider> m_provider;
+    std::unordered_map<uint8_t, TControlSession> m_controls;
 };
 
 #endif // SERVER_INSTANCE_HPP

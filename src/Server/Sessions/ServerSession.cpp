@@ -1,51 +1,43 @@
 #include "ServerSession.hpp"
 #include "Config/ConfigInstance.hpp"
-#include "ServerClientSession.hpp"
-#include "ServerDataSession.hpp"
+#include "ServerProxySession.hpp"
 #include "ServerControlSession.hpp"
 
 #include <Network/Socket/TCP/SSLSocket.hpp>
 #include <Misc/Debug.hpp>
 
 ServerSession::ServerSession(Socket *s)
-    : Session(s),
-      ServerHandshake(this) {
-    debug_print(boost::format("ServerSession::ServerSession %1%") % this);
-    starting.connect([this] {
-        SSLSocket* sock = socket<SSLSocket>();
-        sock->setSSLParameters(config()->verifyHost(), config()->keysPath());
-        sock->setClient(false);
-    });
+    : ServerHandshake(s) {
+    debug_print_this("");
 }
 
 ServerSession::~ServerSession() {
-    debug_print(boost::format("ServerSession::~ServerSession %1%") % this);
+    debug_print_this("");
 }
 
-void ServerSession::startImpl() {
-    startHandshake();
+TAwaitVoid ServerSession::prepare() {
+    co_await ServerHandshake::prepare();
+    SSLSocket* sock = socket<SSLSocket>();
+    sock->setSSLParameters(config()->verifyHost(), config()->keysPath());
+    sock->setClient(false);
 }
 
-void ServerSession::onClient() {
-    std::shared_ptr<ServerClientSession> session(new ServerClientSession(this));
-    clientSession(session);
-    session->start();
-    close();
-}
-
-void ServerSession::onClientData() {
-    std::shared_ptr<ServerDataSession> session(new ServerDataSession(this));
-    dataSession(session);
-    session->start();
-    close();
-}
-
-void ServerSession::onHandshakeDone() {
-    if (type() != ConnectionType::SERVICE_CLIENT_CONTROL)
-        return;
-
-    std::shared_ptr<ServerControlSession> session(new ServerControlSession(this));
-    controlSession(session);
-    session->start();
-    close();
+TAwaitVoid ServerSession::work() {
+    const ConnectionType type = co_await ServerHandshake::defineType();
+    switch(type) {
+    case ConnectionType::SERVICE_CLIENT_CONTROL: {
+        auto control = mutate<ServerControlSession>(this);
+        controlSession(control);
+        control->start();
+        break;
+    }
+    case ConnectionType::CLIENT: {
+        clientSession(mutate<ServerProxySession>(this));
+        break;
+    }
+    case ConnectionType::SERVICE_CLIENT_DATA: {
+        dataSession(mutate<ServerProxySession>(this));
+        break;
+    }
+    }
 }

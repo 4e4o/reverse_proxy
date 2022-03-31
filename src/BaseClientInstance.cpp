@@ -1,36 +1,27 @@
 #include "BaseClientInstance.hpp"
-#include "Protocol/ClientSession.hpp"
+#include "Protocol/ClientHandshake.hpp"
 #include "Config/ConfigInstance.hpp"
 
-#include <Misc/Debug.hpp>
-#include <Misc/Lifecycle.hpp>
 #include <Network/Client.hpp>
-#include <Network/Session/Proxy/ProxyDataSession.hpp>
+#include <Misc/Debug.hpp>
 
-BaseClientInstance::BaseClientInstance(boost::asio::io_context &io)
-    : Instance(io) {
+using namespace boost::asio;
+
+BaseClientInstance::BaseClientInstance(io_context &io, ConnectionType t)
+    : Instance(io),
+      m_type(t) {
 }
 
-void BaseClientInstance::proxy(ConnectionType type, std::shared_ptr<Session> first) {
-    std::shared_ptr<Client> client(new Client(io()));
-    client->registerType<Session, ClientSession, Socket*>();
-    client->enableSSL();
-
-    client->newSession.connect([this, type, first](TWSession ws) {
-        auto second = std::static_pointer_cast<ClientSession>(ws.lock());
-
-        second->setConfig(config());
-        second->setSkipSSLStrip(false);
-        second->setSessionType(type);
-
-        second->handshakeDone.connect([this, first, ws] {
-            auto s1 = ProxyDataSession::proxy(first, ws.lock());
-            Lifecycle::connectTrack(stopped, s1, &Session::close);
-        });
-
-        Lifecycle::connectTrack(stopped, second, &Session::close);
-    });
-
-    Lifecycle::connectTrack(stopped, client, &Client::stop);
-    client->start(config()->remoteIP(), config()->remotePort());
+TAwaitSession BaseClientInstance::get(ISessionRequester*) {
+    return spawn([this]() -> TAwaitSession {
+        TClient client(new Client(io()));
+        client->registerType<Session, ClientSession, Socket*>();
+        client->enableSSL();
+        auto s = co_await client->co_start(use_awaitable, config()->remoteIP(), config()->remotePort());
+        auto session = std::static_pointer_cast<ClientSession>(s);
+        session->setConfig(config());
+        session->setSkipSSLStrip(false);
+        session->setSessionType(m_type);
+        co_return s;
+    }, use_awaitable);
 }

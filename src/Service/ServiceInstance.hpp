@@ -11,12 +11,9 @@ public:
     ~ServiceInstance();
 
 private:
-    void startDataChannels();
+    TAwaitVoid run() override;
 
-    void start() override final;
-    void stop() override final;
-
-    bool m_stopped;
+    void startProxy();
 };
 
 #endif // SERVICE_INSTANCE_HPP

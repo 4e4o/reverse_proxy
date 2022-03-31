@@ -3,17 +3,17 @@
 
 #include "BaseClientInstance.hpp"
 
-class Server;
+#include <Network/ServerForward.hpp>
 
 class ClientInstance : public BaseClientInstance {
 public:
     ClientInstance(boost::asio::io_context &io);
 
 private:
-    void start() override final;
-    void stop() override final;
+    TAwaitVoid run() override;
+    TAwaitVoid onStop() override;
 
-    std::shared_ptr<Server> m_server;
+    TServer m_server;
 };
 
 #endif // CLIENT_INSTANCE_HPP

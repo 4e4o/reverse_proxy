@@ -9,7 +9,7 @@
             "ServerId":0,
             "VerifyHost":"server1",
             "KeysPath":"/mnt/disk2/workspace/coding/reverse_proxy/scripts/keys/cur/keys_client1/",
-            "CryptData":1
+            "CryptData":0
         },
         {
             "Mode": "service",
@@ -20,7 +20,7 @@
             "ServerId":0,
             "VerifyHost":"server1",
             "KeysPath":"/mnt/disk2/workspace/coding/reverse_proxy/scripts/keys/cur/keys_client1/",
-            "CryptData":1
+            "CryptData":0
         }
     ]
 }

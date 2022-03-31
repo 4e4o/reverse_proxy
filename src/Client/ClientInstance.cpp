@@ -1,31 +1,30 @@
 #include "ClientInstance.hpp"
 #include "Config/ConfigInstance.hpp"
 
-#include <Misc/Debug.hpp>
+#include "Network/Session/Proxy/Proxy.hpp"
 #include <Network/Server.hpp>
-#include <Network/Session/Session.hpp>
-
-#define WAIT_SECOND_SESSION_TIMEOUT     TSeconds(10)
+#include <Misc/Debug.hpp>
 
 ClientInstance::ClientInstance(boost::asio::io_context &io)
-    : BaseClientInstance(io),
+    : BaseClientInstance(io, ConnectionType::CLIENT),
       m_server(new Server(io)) {
-    m_server->stopped.connect(stopped);
 }
 
-void ClientInstance::start() {
-    m_server->newSession.connect([this](TWSession ws) {
-        debug_print(boost::format("Client server incoming session %1%") % ws.lock().get());
-        ws.lock()->started.connect([this, ws] {
-            auto s = ws.lock();
-            s->wait(WAIT_SECOND_SESSION_TIMEOUT);
-            proxy(ConnectionType::CLIENT, s);
-        });
+TAwaitVoid ClientInstance::run() {
+    m_server->setHandler([this](TWSession ws) -> bool {
+        auto s = ws.lock();
+        debug_print_this(fmt("Client server incoming session %1%") % s.get());
+        Proxy::TProxy proxy(new Proxy(io(), s, this));
+        registerStop(proxy);
+        proxy->start();
+        return false;   // don't start session
     });
 
     m_server->start(config()->listenIP(), config()->listenPort());
+    co_return;
 }
 
-void ClientInstance::stop() {
+TAwaitVoid ClientInstance::onStop() {
     m_server->stop();
+    co_return;
 }

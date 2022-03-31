@@ -4,33 +4,27 @@
 #include "Config/ConfigHolder.hpp"
 #include "Protocol/ConnectionType.hpp"
 
-#include <memory>
-
-class Session;
+#include <Network/Session/Session.hpp>
 
 // Хэндшйэк для клиентов по отношению к прокси серверу
 
-class ClientHandshake : public ConfigHolder {
+class ClientHandshake : public Session, public ConfigHolder {
 public:
-    ClientHandshake(Session*);
+    ClientHandshake(Socket*);
     ~ClientHandshake();
 
     void setSkipSSLStrip(bool skipSSLStrip);
     void setSessionType(const ConnectionType &sessionType);
 
-    void startHandshake();
-
 protected:
-    virtual void onHandshakeDone() = 0;
+    TAwaitVoid prepare() override;
+    TAwaitVoid work() override;
 
 private:
-    void sendSessionType();
-    void onSessionTypeSended();
-    void finalStep();
-
     bool m_skipSSLStrip;
     ConnectionType m_sessionType;
-    Session* m_session;
 };
+
+using ClientSession = ClientHandshake;
 
 #endif // CLIENT_HANDSHAKE_HPP

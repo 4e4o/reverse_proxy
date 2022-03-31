@@ -4,18 +4,16 @@
 #include "Instance.hpp"
 #include "Protocol/ConnectionType.hpp"
 
-#include <boost/signals2/signal.hpp>
+#include <Network/Session/ISessionProvider.hpp>
 
-class Session;
-
-class BaseClientInstance : public Instance {
+class BaseClientInstance : public Instance, public ISessionProvider {
 public:
-    BaseClientInstance(boost::asio::io_context &io);
+    BaseClientInstance(boost::asio::io_context&, ConnectionType);
 
-protected:
-    void proxy(ConnectionType, std::shared_ptr<Session>);
+private:
+    TAwaitSession get(ISessionRequester*) override;
 
-    boost::signals2::signal<void ()> stopped;
+    const ConnectionType m_type;
 };
 
 #endif // BASE_CLIENT_INSTANCE_HPP

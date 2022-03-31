@@ -3,11 +3,8 @@
 
 #include "Protocol/ServerHandshake.hpp"
 
-#include <Network/Session/Session.hpp>
-
 class ServerControlSession;
-class ServerClientSession;
-class ServerDataSession;
+class ServerProxySession;
 
 /**
  * @brief The ServerSession class
@@ -16,7 +13,7 @@ class ServerDataSession;
  *
  */
 
-class ServerSession : public Session, public ServerHandshake {
+class ServerSession : public ServerHandshake {
 public:
     typedef std::shared_ptr<ServerSession> TSession;
 
@@ -24,14 +21,12 @@ public:
     ~ServerSession();
 
     boost::signals2::signal<void(std::weak_ptr<ServerControlSession>)> controlSession;
-    boost::signals2::signal<void(std::weak_ptr<ServerClientSession>)> clientSession;
-    boost::signals2::signal<void(std::weak_ptr<ServerDataSession>)> dataSession;
+    boost::signals2::signal<void(std::weak_ptr<ServerProxySession>)> clientSession;
+    boost::signals2::signal<void(std::weak_ptr<ServerProxySession>)> dataSession;
 
 private:
-    void startImpl() override final;
-    void onClient() override final;
-    void onClientData() override final;
-    void onHandshakeDone() override final;
+    TAwaitVoid prepare() override;
+    TAwaitVoid work() override final;
 };
 
 #endif // SERVER_SESSION_HPP

@@ -47,9 +47,7 @@ void ServiceInstance::startProxy() {
 
     client->setHandler([this](TWSession ws) {
         debug_print_this("new local service session");
-
-        auto s = ws.lock();
-        Proxy::TProxy proxy(new Proxy(io(), s, this));
+        Proxy::TProxy proxy(new Proxy(io(), ws.lock(), this));
         registerStop(proxy);
         proxy->start();
     });

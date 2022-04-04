@@ -12,7 +12,6 @@ TAwaitVoid ServiceControlSession::work() {
 
     while(running()) {
         co_await reader().all(2);
-
         const ConnectionType type = static_cast<ConnectionType>(ptr[0]);
 
         if ((type != ConnectionType::SERVICE_CLIENT_DATA) || (ptr[1] != config()->serverId()))

@@ -31,7 +31,6 @@ void ClientHandshake::setSkipSSLStrip(bool skipSSLStrip) {
 
 TAwaitVoid ClientHandshake::prepare() {
     co_await Session::prepare();
-
     SSLSocket* sock = socket<SSLSocket>();
     sock->setSSLParameters(config()->verifyHost(), config()->keysPath());
     sock->setClient(true);

@@ -4,12 +4,9 @@
 #include "Config/ConfigHolder.hpp"
 #include "Coroutine/CoroutineTask.hpp"
 
-class ConfigInstance;
-
 class Instance : public CoroutineTask<void>, public ConfigHolder {
 public:    
-    Instance(boost::asio::io_context &io);
-    virtual ~Instance();
+    using CoroutineTask::CoroutineTask;
 };
 
 #endif // INSTANCE_H

@@ -7,7 +7,7 @@ class ServerSession;
 
 class ServerProxySession : public ServerHandshake {
 public:
-    ServerProxySession(Socket*, ServerSession*);
+    using ServerHandshake::ServerHandshake;
 
 private:
     TAwaitVoid work() override;

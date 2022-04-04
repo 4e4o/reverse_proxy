@@ -5,7 +5,6 @@
 #include "Config/ConfigInstance.hpp"
 
 #include <Network/Server.hpp>
-#include <Network/Socket/Socket.hpp>
 #include <Network/Session/Proxy/Proxy.hpp>
 #include <Misc/Debug.hpp>
 

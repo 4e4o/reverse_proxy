@@ -3,13 +3,11 @@
 #include "Config/ConfigInstance.hpp"
 
 #include <Network/Client.hpp>
-#include <Misc/Debug.hpp>
 
 using namespace boost::asio;
 
 BaseClientInstance::BaseClientInstance(io_context &io, ConnectionType t)
-    : Instance(io),
-      m_type(t) {
+    : Instance(io), m_type(t) {
 }
 
 TAwaitSession BaseClientInstance::get(ISessionRequester*) {

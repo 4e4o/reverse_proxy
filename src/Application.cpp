@@ -6,10 +6,8 @@
 
 #include <Config/Config.hpp>
 
-#define PROG_NAME   "reverse proxy"
-
 Application::Application(int argc, char** argv)
-    : BaseConfigApplication(PROG_NAME, argc, argv) {
+    : BaseConfigApplication(argc, argv) {
     config()->registerType<ConfigItem, ConfigInstance, const boost::json::object&>();
 }
 

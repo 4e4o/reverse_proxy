@@ -25,7 +25,7 @@ TAwaitVoid ServiceInstance::run() {
     client->registerType<Session, ServiceControlSession, Socket*>();
     client->enableSSL();
 
-    client->setHandler([this](TWSession ws) {
+    client->newSession.connect([this](TWSession ws) {
         auto session = std::static_pointer_cast<ServiceControlSession>(ws.lock());
         session->setConfig(config());
         session->dataSessionRequest.connect([this] {
@@ -45,7 +45,7 @@ void ServiceInstance::startProxy() {
     // сессия к локальному сервису, реконнекты не включаем
     TClient client(new Client(io()));
 
-    client->setHandler([this](TWSession ws) {
+    client->newSession.connect([this](TWSession ws) {
         debug_print_this("new local service session");
         Proxy::TProxy proxy(new Proxy(io(), ws.lock(), this));
         registerStop(proxy);

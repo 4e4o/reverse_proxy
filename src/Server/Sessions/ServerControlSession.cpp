@@ -2,6 +2,7 @@
 #include "Protocol/ConnectionType.hpp"
 #include "ServerSession.hpp"
 
+#include <AApplication.h>
 #include <Network/Session/Operations/SessionReader.hpp>
 #include <Network/Session/Operations/SessionWriter.hpp>
 #include <Misc/ScopeGuard.hpp>

@@ -37,8 +37,6 @@ TAwaitVoid ClientHandshake::prepare() {
 }
 
 TAwaitVoid ClientHandshake::work() {
-    co_await Session::work();
-
     const uint8_t id = config()->serverId();
     CO_SES_WRITE(this, AS_BYTE(m_sessionType), id);
 

@@ -5,4 +5,4 @@ CMakeLists.txt.user*
 __pycache__
 scripts/keys/cur
 scripts/keys/prev
-scripts/keys/EasyrRSA*
+scripts/keys/EasyRSA*

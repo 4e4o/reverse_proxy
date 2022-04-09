@@ -1,12 +1,10 @@
 [Unit]
-Description=reverse proxy
-After=network-online.target
-Wants=network-online.target
+Description=reverse_proxy service
+After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/computer/workspace/reverse_proxy --c /etc/reverse_proxy/server1.ini
-Restart=on-failure
+ExecStart=/usr/bin/bash -c '/usr/local/bin/reverse_proxy --c /usr/local/etc/reverse_proxy/config.txt'
 
 [Install]
 WantedBy=multi-user.target
